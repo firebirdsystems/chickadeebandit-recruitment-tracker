@@ -1,0 +1,27 @@
+{
+  "id": "recruitment-tracker",
+  "name": "Recruitment Tracker",
+  "version": "1.0.0",
+  "description": "Manage rush and recruitment pipeline: add prospects, move them through stages (invited → rushed → bid → pledged), record votes and notes.",
+  "entrypoint": "index.html",
+  "runtime": "static",
+  "category": "organization",
+  "tags": ["recruitment", "rush", "greek", "pipeline", "prospects"],
+  "data_access": {
+    "reads": ["family.members"],
+    "writes": []
+  },
+  "permissions": {
+    "default_audience": "adults",
+    "requires_approval": false
+  },
+  "storage": "db",
+  "nav": { "label": "Recruitment" },
+  "icon": "🎓",
+  "ai_access": {
+    "allowed": true,
+    "mode": "read_write",
+    "db_exports": ["prospects_summary"],
+    "db_inserts": ["add_prospect"]
+  }
+}

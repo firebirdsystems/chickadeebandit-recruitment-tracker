@@ -1,0 +1,23 @@
+{
+  "type": "array",
+  "items": [
+    {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "Prospect's full name (required)"
+    },
+    {
+      "type": ["string", "null"],
+      "maxLength": 50,
+      "description": "Academic year: Freshman, Sophomore, Junior, Senior, Transfer, or Grad (optional)"
+    },
+    {
+      "type": ["string", "null"],
+      "maxLength": 200,
+      "description": "Who referred this prospect (optional)"
+    }
+  ],
+  "minItems": 1,
+  "maxItems": 3
+}

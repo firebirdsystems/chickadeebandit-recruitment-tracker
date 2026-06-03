@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="/run/recruitment-tracker/" />
+  <title>Recruitment Tracker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:           var(--hub-bg, #f9fafb);
+      --card:         var(--hub-surface, #ffffff);
+      --border:       var(--hub-border, #e5e7eb);
+      --text:         var(--hub-text, #111827);
+      --muted:        var(--hub-text-muted, #6b7280);
+      --accent:       var(--hub-primary, #111827);
+      --accent-fg:    var(--hub-primary-fg, #ffffff);
+      --accent-hover: var(--hub-primary-hover, #374151);
+      --radius:       var(--hub-radius, 0.5rem);
+      --shadow:       0 1px 3px rgba(0,0,0,.07);
+      --green: #16a34a; --amber: #d97706; --red: #dc2626; --blue: #3b82f6; --indigo: #6366f1;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: var(--hub-font-size, 15px); }
+    .app { max-width: 900px; margin: 0 auto; padding: 20px 16px 60px; }
+
+    /* Header */
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 12px; }
+    .header h1 { font-size: 1.5rem; font-weight: 700; }
+    .btn-primary { background: var(--accent); color: var(--accent-fg); border: none; border-radius: 8px; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:disabled { opacity: .5; cursor: default; }
+    .btn-ghost { background: var(--card); color: var(--muted); border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-sm { padding: 5px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--card); color: var(--muted); }
+    .btn-sm:hover { border-color: var(--accent); color: var(--text); }
+    .btn-danger { background: #fee2e2; color: var(--red); border: none; border-radius: 6px; padding: 7px 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+    .btn-danger:hover { background: #fecaca; }
+
+    /* Tabs */
+    .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+    .tab { padding: 8px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--muted); border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; background: transparent; }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* Pipeline kanban */
+    .pipeline { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 12px; align-items: flex-start; }
+    .pipeline-col { flex: 1 0 230px; min-width: 230px; max-width: 280px; display: flex; flex-direction: column; }
+    .pipeline-col-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: var(--radius) var(--radius) 0 0; border: 1px solid var(--border); border-bottom: none; background: var(--card); }
+    .col-title { display: flex; align-items: center; gap: 7px; font-size: 0.82rem; font-weight: 700; }
+    .col-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .col-count { font-size: 0.72rem; font-weight: 600; color: var(--muted); background: #f3f4f6; border-radius: 10px; padding: 1px 7px; }
+    .col-add { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 1.1rem; line-height: 1; padding: 2px 4px; border-radius: 4px; }
+    .col-add:hover { background: #f3f4f6; color: var(--text); }
+    .pipeline-col-body { background: #f3f4f6; border: 1px solid var(--border); border-radius: 0 0 var(--radius) var(--radius); padding: 8px; min-height: 100px; display: flex; flex-direction: column; gap: 8px; }
+
+    /* Prospect card */
+    .prospect-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 11px 12px; cursor: pointer; transition: box-shadow .12s; }
+    .prospect-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.1); }
+    .card-name { font-size: 0.88rem; font-weight: 600; line-height: 1.3; }
+    .card-meta { font-size: 0.74rem; color: var(--muted); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+    .year-badge { font-size: 0.68rem; font-weight: 600; padding: 1px 6px; border-radius: 6px; background: #f3f4f6; color: var(--muted); }
+    .card-tally { display: flex; gap: 6px; margin-top: 8px; }
+    .tally-chip { display: flex; align-items: center; gap: 3px; font-size: 0.72rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .tally-yes     { background: #dcfce7; color: var(--green); }
+    .tally-no      { background: #fee2e2; color: var(--red); }
+    .tally-abstain { background: #f3f4f6; color: var(--muted); }
+
+    /* Dropped toggle */
+    .dropped-row { margin-top: 16px; }
+    .toggle-dropped { background: none; border: 1.5px dashed var(--border); border-radius: 8px; padding: 8px 16px; width: 100%; font-size: 0.82rem; font-weight: 600; cursor: pointer; color: var(--muted); text-align: center; }
+    .toggle-dropped:hover { border-color: var(--accent); color: var(--accent); }
+    .dropped-col { flex: 0 0 100%; max-width: 100%; flex-direction: row; flex-wrap: wrap; gap: 8px; }
+    .dropped-col .pipeline-col-body { flex-direction: row; flex-wrap: wrap; min-height: auto; }
+    .dropped-col .prospect-card { flex: 1 0 200px; max-width: 280px; opacity: .75; }
+
+    /* Prospects list tab */
+    .search-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+    .search-bar input { flex: 1; padding: 9px 13px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 0.9rem; background: var(--card); color: var(--text); outline: none; }
+    .search-bar input:focus { border-color: var(--accent); }
+    .filter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .chip { padding: 5px 13px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--card); font-size: 0.8rem; font-weight: 500; cursor: pointer; color: var(--muted); }
+    .chip.active { border-color: var(--accent); background: #f0f0ff; color: var(--accent); font-weight: 600; }
+    .chip:hover:not(.active) { border-color: #c7d2fe; }
+
+    .prospect-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: box-shadow .1s; }
+    .prospect-row:hover { box-shadow: var(--shadow); }
+    .row-info { flex: 1; min-width: 0; }
+    .row-name { font-size: 0.9rem; font-weight: 600; }
+    .row-meta { font-size: 0.76rem; color: var(--muted); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .stage-badge { font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; color: #fff; white-space: nowrap; flex-shrink: 0; }
+    .row-tally { display: flex; gap: 6px; flex-shrink: 0; }
+
+    /* Votes summary table */
+    .votes-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .votes-table th { text-align: left; padding: 8px 12px; font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; border-bottom: 2px solid var(--border); background: var(--card); }
+    .votes-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--card); }
+    .votes-table tr:last-child td { border-bottom: none; }
+    .votes-table tr:hover td { background: #fafafa; cursor: pointer; }
+    .pct-bar-wrap { display: flex; align-items: center; gap: 8px; }
+    .pct-bar { height: 6px; border-radius: 3px; background: #e5e7eb; flex: 1; overflow: hidden; min-width: 60px; }
+    .pct-bar-fill { height: 100%; border-radius: 3px; background: var(--green); transition: width .3s; }
+    .pct-label { font-size: 0.76rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+
+    /* Empty / loading */
+    .empty { text-align: center; padding: 48px 20px; color: var(--muted); }
+    .empty h3 { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .empty p { font-size: 0.85rem; line-height: 1.6; }
+    .loading { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 0.9rem; }
+    .col-empty { text-align: center; padding: 24px 8px; font-size: 0.78rem; color: var(--muted); }
+
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; display: flex; align-items: flex-end; justify-content: center; }
+    @media (min-width: 600px) { .modal-backdrop { align-items: center; } }
+    .modal { background: var(--card); border-radius: 16px 16px 0 0; width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; }
+    @media (min-width: 600px) { .modal { border-radius: 16px; max-height: 88vh; } }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 14px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card); z-index: 1; }
+    .modal-title { font-size: 1rem; font-weight: 700; }
+    .modal-close { font-size: 1.3rem; background: none; border: none; cursor: pointer; color: var(--muted); padding: 4px 8px; border-radius: 6px; line-height: 1; }
+    .modal-close:hover { background: #f3f4f6; }
+    .modal-body { padding: 20px; }
+    .modal-footer { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-top: 1px solid var(--border); gap: 8px; }
+
+    /* Form fields */
+    .field { margin-bottom: 15px; }
+    .field label { display: block; font-size: 0.76rem; font-weight: 700; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
+    .field input, .field textarea, .field select { width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 0.9rem; background: var(--card); color: var(--text); outline: none; font-family: inherit; }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent); }
+    .field textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Stage pills */
+    .stage-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+    .stage-pill { padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--card); font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--muted); transition: all .1s; }
+    .stage-pill:hover:not(.active) { border-color: #94a3b8; }
+    .stage-pill.active { color: #fff; border-color: transparent; }
+
+    /* Vote buttons */
+    .vote-section { margin-top: 4px; }
+    .vote-section .section-title { font-size: 0.76rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; }
+    .vote-btns { display: flex; gap: 8px; margin-bottom: 12px; }
+    .vote-btn { flex: 1; padding: 9px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--card); font-size: 0.85rem; font-weight: 600; cursor: pointer; text-align: center; color: var(--muted); transition: all .12s; }
+    .vote-btn:hover { border-color: #94a3b8; }
+    .vote-btn.yes.active   { background: #dcfce7; border-color: var(--green); color: var(--green); }
+    .vote-btn.no.active    { background: #fee2e2; border-color: var(--red);   color: var(--red);   }
+    .vote-btn.abstain.active { background: #f3f4f6; border-color: #9ca3af;    color: #374151;     }
+    .vote-tally { font-size: 0.8rem; color: var(--muted); display: flex; gap: 14px; }
+    .vote-tally-item { display: flex; align-items: center; gap: 4px; }
+    .vote-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Activity feed */
+    .activity-feed { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 14px; }
+    .activity-title { font-size: 0.76rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; }
+    .activity-item { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); flex-shrink: 0; margin-top: 6px; }
+    .activity-body { flex: 1; min-width: 0; }
+    .activity-detail { font-size: 0.82rem; line-height: 1.4; }
+    .activity-meta { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .activity-empty { font-size: 0.82rem; color: var(--muted); padding: 8px 0; }
+
+    /* Divider */
+    .section-divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+    /* Avatar */
+    .avatar { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1f2937; color: #fff; padding: 10px 20px; border-radius: 10px; font-size: 0.85rem; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,.25); pointer-events: none; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>🎓 Recruitment</h1>
+    <button class="btn-primary" onclick="openNewProspect()">+ Add Prospect</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-pipeline"  onclick="setTab('pipeline')">Pipeline</button>
+    <button class="tab"        id="tab-prospects" onclick="setTab('prospects')">All Prospects</button>
+    <button class="tab"        id="tab-votes"     onclick="setTab('votes')">Votes</button>
+  </div>
+  <div id="root"><div class="loading">Loading…</div></div>
+</div>
+
+<script type="module">
+import { memberColor, initial, esc, isAdult, hubConfirm, formatRelativeDate } from "/hub-sdk.js";
+import {
+  STAGES, ACTIVE_STAGES, STAGE_LABELS, STAGE_COLORS,
+  YEAR_OPTIONS, VOTE_LABELS, VOTE_COLORS,
+  tallyVotes, prospectsByStage, sortProspects,
+} from "./logic.js";
+
+const CONTEXT = window.__CONTEXT_URL ?? "";
+const DB      = window.__DB_URL      ?? "";
+const ME      = window.__CURRENT_MEMBER ?? null;
+const APP_ID  = window.__APP_ID ?? "recruitment-tracker";
+
+// ── Demo data ─────────────────────────────────────────────────────────────────
+const DEMO_MEMBERS = [
+  { id: "dm1", name: "Alex Chen",    role: "adult" },
+  { id: "dm2", name: "Jordan Lee",   role: "adult" },
+  { id: "dm3", name: "Sam Rivera",   role: "adult" },
+];
+
+const DEMO_PROSPECTS = [
+  { id: "dp1", name: "Tyler Brooks",  year: "Freshman",  contact: "tyler@example.com",  source: "Alex Chen",   stage: "invited",  notes: "Met at fall rush event.",            created_by: "dm1", created_at: "2026-01-15T10:00:00Z", updated_at: "2026-01-15T10:00:00Z" },
+  { id: "dp2", name: "Morgan Walsh",  year: "Sophomore", contact: "morgan@example.com", source: "Jordan Lee",  stage: "rushed",   notes: "Very enthusiastic. Follows up fast.", created_by: "dm2", created_at: "2026-01-14T09:00:00Z", updated_at: "2026-01-16T12:00:00Z" },
+  { id: "dp3", name: "Casey Kim",     year: "Freshman",  contact: "",                   source: "",            stage: "rushed",   notes: "",                                   created_by: "dm1", created_at: "2026-01-14T11:00:00Z", updated_at: "2026-01-16T14:00:00Z" },
+  { id: "dp4", name: "Drew Santos",   year: "Junior",    contact: "drew@example.com",   source: "Sam Rivera",  stage: "bid",      notes: "Strong candidate. Leadership experience in student gov.", created_by: "dm3", created_at: "2026-01-10T09:00:00Z", updated_at: "2026-01-17T10:00:00Z" },
+  { id: "dp5", name: "Quinn Park",    year: "Transfer",  contact: "",                   source: "Alex Chen",   stage: "pledged",  notes: "Officially pledged.",                created_by: "dm1", created_at: "2026-01-05T08:00:00Z", updated_at: "2026-01-18T09:00:00Z" },
+  { id: "dp6", name: "Blake Turner",  year: "Sophomore", contact: "",                   source: "",            stage: "dropped",  notes: "No longer interested — schedule conflicts.", created_by: "dm2", created_at: "2026-01-12T10:00:00Z", updated_at: "2026-01-15T16:00:00Z" },
+];
+
+const DEMO_VOTES = [
+  { id: "dv1", prospect_id: "dp4", voter_id: "dm1", vote: "yes",     notes: "", created_at: "2026-01-17T10:00:00Z", updated_at: "2026-01-17T10:00:00Z" },
+  { id: "dv2", prospect_id: "dp4", voter_id: "dm2", vote: "yes",     notes: "", created_at: "2026-01-17T11:00:00Z", updated_at: "2026-01-17T11:00:00Z" },
+  { id: "dv3", prospect_id: "dp4", voter_id: "dm3", vote: "abstain", notes: "", created_at: "2026-01-17T12:00:00Z", updated_at: "2026-01-17T12:00:00Z" },
+  { id: "dv4", prospect_id: "dp5", voter_id: "dm1", vote: "yes",     notes: "", created_at: "2026-01-18T09:00:00Z", updated_at: "2026-01-18T09:00:00Z" },
+  { id: "dv5", prospect_id: "dp5", voter_id: "dm2", vote: "yes",     notes: "", created_at: "2026-01-18T10:00:00Z", updated_at: "2026-01-18T10:00:00Z" },
+  { id: "dv6", prospect_id: "dp5", voter_id: "dm3", vote: "yes",     notes: "", created_at: "2026-01-18T11:00:00Z", updated_at: "2026-01-18T11:00:00Z" },
+  { id: "dv7", prospect_id: "dp2", voter_id: "dm1", vote: "yes",     notes: "", created_at: "2026-01-16T12:00:00Z", updated_at: "2026-01-16T12:00:00Z" },
+  { id: "dv8", prospect_id: "dp2", voter_id: "dm3", vote: "no",      notes: "", created_at: "2026-01-16T13:00:00Z", updated_at: "2026-01-16T13:00:00Z" },
+];
+
+const DEMO_ACTIVITY = [
+  { id: "da1", prospect_id: "dp5", actor_id: "dm1", action: "stage_changed", detail: "Bid → Pledged",              created_at: "2026-01-18T09:00:00Z" },
+  { id: "da2", prospect_id: "dp4", actor_id: "dm3", action: "stage_changed", detail: "Rushed → Bid",               created_at: "2026-01-17T10:00:00Z" },
+  { id: "da3", prospect_id: "dp2", actor_id: "dm2", action: "stage_changed", detail: "Invited → Rushed",           created_at: "2026-01-16T12:00:00Z" },
+  { id: "da4", prospect_id: "dp6", actor_id: "dm2", action: "stage_changed", detail: "Invited → Dropped",          created_at: "2026-01-15T16:00:00Z" },
+  { id: "da5", prospect_id: "dp1", actor_id: "dm1", action: "prospect_added", detail: "Added Tyler Brooks",        created_at: "2026-01-15T10:00:00Z" },
+  { id: "da6", prospect_id: "dp4", actor_id: "dm3", action: "prospect_added", detail: "Added Drew Santos",         created_at: "2026-01-10T09:00:00Z" },
+];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let members   = [];
+let prospects = [];
+let votes     = [];
+let activity  = [];
+
+let activeTab    = "pipeline";
+let showDropped  = false;
+let searchQuery  = "";
+let stageFilter  = "all";
+
+let modalEl       = null;
+let modalProspect = null;
+let modalIsNew    = false;
+let toastTimer    = null;
+
+// ── DB helper ─────────────────────────────────────────────────────────────────
+async function db(sql, params = []) {
+  if (!DB) return { rows: [] };
+  try {
+    const res = await fetch(DB, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sql, params }),
+    });
+    return await res.json();
+  } catch { return { rows: [] }; }
+}
+
+// ── Data loading ──────────────────────────────────────────────────────────────
+async function load() {
+  const [ctxRes, prospectsRes, votesRes, activityRes] = await Promise.all([
+    CONTEXT
+      ? fetch(`${CONTEXT}?keys=family.members`).then(r => r.json()).catch(() => ({}))
+      : Promise.resolve({}),
+    db("SELECT * FROM prospects ORDER BY created_at"),
+    db("SELECT * FROM votes ORDER BY created_at"),
+    db("SELECT * FROM prospect_activity ORDER BY created_at DESC LIMIT 500"),
+  ]);
+
+  members = ctxRes["family.members"] ?? DEMO_MEMBERS;
+
+  if (DB) {
+    prospects = prospectsRes.rows ?? [];
+    votes     = votesRes.rows ?? [];
+    activity  = activityRes.rows ?? [];
+  } else {
+    prospects = DEMO_PROSPECTS;
+    votes     = DEMO_VOTES;
+    activity  = DEMO_ACTIVITY;
+  }
+}
+
+async function reload() {
+  if (!DB) return;
+  const [prospectsRes, votesRes, activityRes] = await Promise.all([
+    db("SELECT * FROM prospects ORDER BY created_at"),
+    db("SELECT * FROM votes ORDER BY created_at"),
+    db("SELECT * FROM prospect_activity ORDER BY created_at DESC LIMIT 500"),
+  ]);
+  prospects = prospectsRes.rows ?? [];
+  votes     = votesRes.rows ?? [];
+  activity  = activityRes.rows ?? [];
+}
+
+// ── CRUD ──────────────────────────────────────────────────────────────────────
+async function createProspect(fields) {
+  const id = crypto.randomUUID();
+  const ts = new Date().toISOString();
+  await db(
+    `INSERT INTO prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, fields.name, fields.year || "", fields.contact || "", fields.source || "",
+     fields.stage || "invited", fields.notes || "", ME?.id || null, ts, ts]
+  );
+  await logActivity(id, "prospect_added", `Added ${fields.name}`);
+  return id;
+}
+
+async function updateProspect(id, fields) {
+  const sets = Object.keys(fields).map(k => `${k} = ?`).join(", ");
+  await db(
+    `UPDATE prospects SET ${sets}, updated_at = ? WHERE id = ?`,
+    [...Object.values(fields), new Date().toISOString(), id]
+  );
+}
+
+async function deleteProspect(id) {
+  await Promise.all([
+    db("DELETE FROM prospects WHERE id = ?",          [id]),
+    db("DELETE FROM votes WHERE prospect_id = ?",     [id]),
+    db("DELETE FROM prospect_activity WHERE prospect_id = ?", [id]),
+  ]);
+}
+
+async function castVote(prospectId, vote) {
+  const id = crypto.randomUUID();
+  const ts = new Date().toISOString();
+  await db(
+    `INSERT INTO votes (id, prospect_id, voter_id, vote, notes, created_at, updated_at)
+     VALUES (?, ?, ?, ?, '', ?, ?)
+     ON CONFLICT (household_id, prospect_id, voter_id)
+     DO UPDATE SET vote = EXCLUDED.vote, updated_at = EXCLUDED.updated_at`,
+    [id, prospectId, ME?.id || "unknown", vote, ts, ts]
+  );
+}
+
+async function logActivity(prospectId, action, detail) {
+  const id = crypto.randomUUID();
+  await db(
+    `INSERT INTO prospect_activity (id, prospect_id, actor_id, action, detail, created_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [id, prospectId, ME?.id || null, action, detail, new Date().toISOString()]
+  );
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function votesFor(prospectId) { return votes.filter(v => v.prospect_id === prospectId); }
+function myVote(prospectId)   { return votes.find(v => v.prospect_id === prospectId && v.voter_id === ME?.id)?.vote ?? null; }
+function memberName(id)       { return members.find(m => m.id === id)?.name ?? null; }
+function mcolor(id)           { return memberColor(id, members); }
+
+function renderTallyChips(tally) {
+  if (tally.total === 0) return `<span style="font-size:.72rem;color:var(--muted)">No votes</span>`;
+  const parts = [];
+  if (tally.yes     > 0) parts.push(`<span class="tally-chip tally-yes">✓ ${tally.yes}</span>`);
+  if (tally.no      > 0) parts.push(`<span class="tally-chip tally-no">✗ ${tally.no}</span>`);
+  if (tally.abstain > 0) parts.push(`<span class="tally-chip tally-abstain">○ ${tally.abstain}</span>`);
+  return parts.join("");
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  const root = document.getElementById("root");
+  if (!root) return;
+
+  if (activeTab === "pipeline")  root.innerHTML = renderPipeline();
+  else if (activeTab === "prospects") root.innerHTML = renderProspectsList();
+  else if (activeTab === "votes")     root.innerHTML = renderVotesTab();
+
+  ["pipeline","prospects","votes"].forEach(t => {
+    const el = document.getElementById(`tab-${t}`);
+    if (el) el.className = `tab${t === activeTab ? " active" : ""}`;
+  });
+}
+
+// ── Pipeline tab ──────────────────────────────────────────────────────────────
+function renderPipeline() {
+  const activeCols = ACTIVE_STAGES.map(s => renderColumn(s)).join("");
+  const dropped    = prospectsByStage(prospects, "dropped");
+  const droppedSection = `
+    <div class="dropped-row">
+      <button class="toggle-dropped" onclick="toggleDropped()">
+        ${showDropped ? "▲ Hide dropped" : `▼ Show dropped (${dropped.length})`}
+      </button>
+      ${showDropped ? `
+        <div style="margin-top:10px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="width:9px;height:9px;border-radius:50%;background:${STAGE_COLORS.dropped};display:inline-block"></span>
+            <span style="font-size:.82rem;font-weight:700">Dropped</span>
+            <span class="col-count">${dropped.length}</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            ${dropped.length === 0
+              ? `<p class="col-empty" style="width:100%">No dropped prospects.</p>`
+              : dropped.map(p => renderCard(p, true)).join("")
+            }
+          </div>
+        </div>` : ""}
+    </div>`;
+
+  return `<div class="pipeline">${activeCols}</div>${droppedSection}`;
+}
+
+function renderColumn(stage) {
+  const ps    = prospectsByStage(prospects, stage);
+  const color = STAGE_COLORS[stage];
+  const label = STAGE_LABELS[stage];
+
+  return `
+    <div class="pipeline-col">
+      <div class="pipeline-col-header">
+        <div class="col-title">
+          <span class="col-dot" style="background:${color}"></span>
+          ${esc(label)}
+          <span class="col-count">${ps.length}</span>
+        </div>
+        <button class="col-add" title="Add prospect to ${label}" onclick="openNewProspect('${stage}')">+</button>
+      </div>
+      <div class="pipeline-col-body">
+        ${ps.length === 0
+          ? `<p class="col-empty">No prospects yet</p>`
+          : ps.map(p => renderCard(p)).join("")
+        }
+      </div>
+    </div>`;
+}
+
+function renderCard(p, compact = false) {
+  const tally = tallyVotes(votesFor(p.id));
+  const yearHtml = p.year ? `<span class="year-badge">${esc(p.year)}</span>` : "";
+  const sourceHtml = p.source ? `<span>via ${esc(p.source)}</span>` : "";
+
+  return `
+    <div class="prospect-card" onclick="openProspect('${p.id}')">
+      <div class="card-name">${esc(p.name)}</div>
+      ${(p.year || p.source) ? `
+        <div class="card-meta">
+          ${yearHtml}
+          ${sourceHtml}
+        </div>` : ""}
+      ${tally.total > 0 ? `<div class="card-tally">${renderTallyChips(tally)}</div>` : ""}
+    </div>`;
+}
+
+// ── Prospects list tab ────────────────────────────────────────────────────────
+function renderProspectsList() {
+  const query  = searchQuery.toLowerCase();
+  let filtered = sortProspects(prospects);
+  if (stageFilter !== "all") filtered = filtered.filter(p => p.stage === stageFilter);
+  if (query) filtered = filtered.filter(p =>
+    p.name.toLowerCase().includes(query) ||
+    p.source.toLowerCase().includes(query) ||
+    p.year.toLowerCase().includes(query)
+  );
+
+  const chips = ["all", ...STAGES].map(s => {
+    const label = s === "all" ? "All" : STAGE_LABELS[s];
+    const count = s === "all" ? prospects.length : prospects.filter(p => p.stage === s).length;
+    return `<button class="chip ${stageFilter === s ? "active" : ""}" onclick="setStageFilter('${s}')">
+      ${esc(label)} <span style="font-size:.7rem;opacity:.7">${count}</span>
+    </button>`;
+  }).join("");
+
+  const rows = filtered.map(p => {
+    const tally  = tallyVotes(votesFor(p.id));
+    const color  = STAGE_COLORS[p.stage];
+    const year   = p.year ? `<span>${esc(p.year)}</span>` : "";
+    const source = p.source ? `<span>via ${esc(p.source)}</span>` : "";
+
+    return `
+      <div class="prospect-row" onclick="openProspect('${p.id}')">
+        <div class="row-info">
+          <div class="row-name">${esc(p.name)}</div>
+          ${(p.year || p.source) ? `<div class="row-meta">${year}${source}</div>` : ""}
+        </div>
+        <div class="row-tally">${renderTallyChips(tally)}</div>
+        <span class="stage-badge" style="background:${color}">${esc(STAGE_LABELS[p.stage])}</span>
+      </div>`;
+  }).join("");
+
+  return `
+    <div class="search-bar">
+      <input type="text" placeholder="Search prospects…" value="${esc(searchQuery)}"
+        oninput="setSearch(this.value)" />
+    </div>
+    <div class="filter-bar">${chips}</div>
+    ${filtered.length === 0
+      ? `<div class="empty"><h3>No prospects found</h3><p>Try a different filter or add a new prospect.</p></div>`
+      : rows
+    }`;
+}
+
+// ── Votes tab ─────────────────────────────────────────────────────────────────
+function renderVotesTab() {
+  const active = sortProspects(prospects.filter(p => p.stage !== "dropped"));
+  if (active.length === 0) {
+    return `<div class="empty"><h3>No prospects yet</h3><p>Add prospects to start tracking votes.</p></div>`;
+  }
+
+  const totalVoters = members.filter(m => isAdult(m)).length;
+
+  const rows = active.map(p => {
+    const pVotes = votesFor(p.id);
+    const tally  = tallyVotes(pVotes);
+    const pct    = tally.total > 0 ? Math.round((tally.yes / tally.total) * 100) : 0;
+    const color  = STAGE_COLORS[p.stage];
+
+    return `
+      <tr onclick="openProspect('${p.id}')">
+        <td>
+          <div style="font-weight:600;font-size:.88rem">${esc(p.name)}</div>
+          ${p.year ? `<div style="font-size:.74rem;color:var(--muted)">${esc(p.year)}</div>` : ""}
+        </td>
+        <td><span class="stage-badge" style="background:${color}">${esc(STAGE_LABELS[p.stage])}</span></td>
+        <td style="color:var(--green);font-weight:700">${tally.yes}</td>
+        <td style="color:var(--red);font-weight:700">${tally.no}</td>
+        <td style="color:var(--muted)">${tally.abstain}</td>
+        <td>
+          <div class="pct-bar-wrap">
+            <div class="pct-bar"><div class="pct-bar-fill" style="width:${pct}%"></div></div>
+            <span class="pct-label">${tally.total > 0 ? pct + "%" : "—"}</span>
+          </div>
+        </td>
+        <td style="color:var(--muted);font-size:.8rem">${tally.total} / ${totalVoters}</td>
+      </tr>`;
+  }).join("");
+
+  return `
+    <div style="overflow-x:auto">
+      <table class="votes-table">
+        <thead>
+          <tr>
+            <th>Prospect</th>
+            <th>Stage</th>
+            <th>Yes</th>
+            <th>No</th>
+            <th>Abstain</th>
+            <th style="min-width:120px">Yes %</th>
+            <th>Voted</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function openModal(html) {
+  closeModal();
+  modalEl = document.createElement("div");
+  modalEl.className = "modal-backdrop";
+  modalEl.innerHTML = `<div class="modal">${html}</div>`;
+  modalEl.addEventListener("click", e => { if (e.target === modalEl) closeModal(); });
+  document.body.appendChild(modalEl);
+}
+
+function closeModal() { modalEl?.remove(); modalEl = null; }
+
+function buildProspectModal(p, isNew) {
+  const pVotes    = votesFor(p.id);
+  const tally     = tallyVotes(pVotes);
+  const myV       = myVote(p.id);
+  const pActivity = activity
+    .filter(a => a.prospect_id === p.id)
+    .slice(0, 20);
+
+  const stagePills = STAGES.map(s => `
+    <button class="stage-pill ${p.stage === s ? "active" : ""}" data-stage="${s}"
+      style="${p.stage === s ? `background:${STAGE_COLORS[s]};border-color:${STAGE_COLORS[s]}` : ""}"
+      onclick="setProspectStage('${s}')">${esc(STAGE_LABELS[s])}</button>
+  `).join("");
+
+  const voteSection = ME ? `
+    <div class="section-divider"></div>
+    <div class="vote-section">
+      <div class="section-title">Your Vote</div>
+      <div class="vote-btns">
+        ${["yes","no","abstain"].map(v => `
+          <button class="vote-btn ${v}${myV === v ? " active" : ""}" onclick="submitVote('${p.id}','${v}')">
+            ${{ yes: "✓ Yes", no: "✗ No", abstain: "○ Abstain" }[v]}
+          </button>`).join("")}
+      </div>
+      <div class="vote-tally">
+        <span class="vote-tally-item"><span class="vote-dot" style="background:var(--green)"></span> ${tally.yes} yes</span>
+        <span class="vote-tally-item"><span class="vote-dot" style="background:var(--red)"></span> ${tally.no} no</span>
+        <span class="vote-tally-item"><span class="vote-dot" style="background:#9ca3af"></span> ${tally.abstain} abstain</span>
+      </div>
+    </div>` : "";
+
+  const activityHtml = !isNew ? `
+    <div class="activity-feed">
+      <div class="activity-title">Activity</div>
+      ${pActivity.length === 0
+        ? `<p class="activity-empty">No activity yet.</p>`
+        : pActivity.map(a => {
+            const actor = a.actor_id ? memberName(a.actor_id) : null;
+            return `
+              <div class="activity-item">
+                <div class="activity-dot"></div>
+                <div class="activity-body">
+                  <div class="activity-detail">${esc(a.detail)}</div>
+                  <div class="activity-meta">
+                    ${actor ? esc(actor) + " · " : ""}${formatRelativeDate(a.created_at)}
+                  </div>
+                </div>
+              </div>`;
+          }).join("")
+      }
+    </div>` : "";
+
+  return `
+    <div class="modal-header">
+      <span class="modal-title">${isNew ? "New Prospect" : "Edit Prospect"}</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Name</label>
+        <input type="text" id="f-name" value="${esc(p.name)}" placeholder="Full name" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Year</label>
+          <select id="f-year">
+            <option value="">— Select —</option>
+            ${YEAR_OPTIONS.map(y => `<option value="${y}" ${p.year === y ? "selected" : ""}>${y}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field">
+          <label>Contact</label>
+          <input type="text" id="f-contact" value="${esc(p.contact)}" placeholder="Phone or email" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Referred by</label>
+        <input type="text" id="f-source" value="${esc(p.source)}" placeholder="Who referred them?" />
+      </div>
+      <div class="field">
+        <label>Stage</label>
+        <div class="stage-pills" id="stage-pills">${stagePills}</div>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="f-notes" placeholder="Add notes…">${esc(p.notes)}</textarea>
+      </div>
+      ${voteSection}
+      ${activityHtml}
+    </div>
+    <div class="modal-footer">
+      <div>
+        ${!isNew ? `<button class="btn-danger" onclick="confirmDelete('${p.id}')">Delete</button>` : ""}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveProspect('${isNew ? "" : p.id}')">
+          ${isNew ? "Create" : "Save"}
+        </button>
+      </div>
+    </div>`;
+}
+
+window.openProspect = function(id) {
+  const p = prospects.find(x => x.id === id);
+  if (!p) return;
+  modalProspect = { ...p };
+  modalIsNew    = false;
+  openModal(buildProspectModal(modalProspect, false));
+};
+
+window.openNewProspect = function(defaultStage = "invited") {
+  modalProspect = { id: "", name: "", year: "", contact: "", source: "", stage: defaultStage, notes: "" };
+  modalIsNew    = true;
+  openModal(buildProspectModal(modalProspect, true));
+};
+
+window.closeModal = closeModal;
+
+window.setProspectStage = function(stage) {
+  if (!modalProspect) return;
+  modalProspect.stage = stage;
+  document.querySelectorAll(".stage-pill").forEach(btn => {
+    const s = btn.dataset.stage;
+    const active = s === stage;
+    btn.className = `stage-pill${active ? " active" : ""}`;
+    btn.style.background   = active ? STAGE_COLORS[s] : "";
+    btn.style.borderColor  = active ? STAGE_COLORS[s] : "";
+    btn.style.color        = active ? "#fff" : "";
+  });
+};
+
+window.submitVote = async function(prospectId, vote) {
+  if (!ME || !DB) return;
+  const btn = modalEl?.querySelector(`.vote-btn.${vote}`);
+  if (btn) { btn.disabled = true; }
+  await castVote(prospectId, vote);
+  await reload();
+  // Re-render vote section in-place
+  if (modalProspect) {
+    const pVotes = votesFor(prospectId);
+    const tally  = tallyVotes(pVotes);
+    const myV    = myVote(prospectId);
+    document.querySelectorAll(".vote-btn").forEach(b => {
+      const v = [...b.classList].find(c => ["yes","no","abstain"].includes(c));
+      if (!v) return;
+      b.disabled = false;
+      b.className = `vote-btn ${v}${myV === v ? " active" : ""}`;
+    });
+    const tallyEl = modalEl?.querySelector(".vote-tally");
+    if (tallyEl) {
+      tallyEl.innerHTML = `
+        <span class="vote-tally-item"><span class="vote-dot" style="background:var(--green)"></span> ${tally.yes} yes</span>
+        <span class="vote-tally-item"><span class="vote-dot" style="background:var(--red)"></span> ${tally.no} no</span>
+        <span class="vote-tally-item"><span class="vote-dot" style="background:#9ca3af"></span> ${tally.abstain} abstain</span>`;
+    }
+  }
+};
+
+window.saveProspect = async function(existingId) {
+  const name = document.getElementById("f-name")?.value.trim();
+  if (!name) { document.getElementById("f-name")?.focus(); return; }
+
+  const btn = modalEl?.querySelector(".modal-footer .btn-primary");
+  if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
+
+  const prevStage = !modalIsNew ? prospects.find(p => p.id === existingId)?.stage : null;
+  const fields = {
+    name,
+    year:    document.getElementById("f-year")?.value || "",
+    contact: document.getElementById("f-contact")?.value.trim() || "",
+    source:  document.getElementById("f-source")?.value.trim() || "",
+    stage:   modalProspect?.stage || "invited",
+    notes:   document.getElementById("f-notes")?.value || "",
+  };
+
+  try {
+    if (modalIsNew) {
+      await createProspect(fields);
+      showToast("Prospect added");
+    } else {
+      await updateProspect(existingId, fields);
+      if (prevStage && prevStage !== fields.stage) {
+        await logActivity(existingId, "stage_changed", `${STAGE_LABELS[prevStage]} → ${STAGE_LABELS[fields.stage]}`);
+      }
+      showToast("Saved");
+    }
+    closeModal();
+    await reload();
+    render();
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = existingId ? "Save" : "Create"; }
+    throw e;
+  }
+};
+
+window.confirmDelete = async function(id) {
+  const p = prospects.find(x => x.id === id);
+  if (!await hubConfirm({
+    message: `Delete ${p?.name ?? "this prospect"}?`,
+    description: "Their votes and activity will also be removed.",
+    confirmLabel: "Delete",
+    destructive: true,
+  })) return;
+  await deleteProspect(id);
+  closeModal();
+  await reload();
+  render();
+  showToast("Prospect deleted");
+};
+
+// ── Nav helpers ───────────────────────────────────────────────────────────────
+window.setTab         = (t) => { activeTab = t; render(); };
+window.toggleDropped  = ()  => { showDropped = !showDropped; render(); };
+window.setSearch      = (q) => { searchQuery = q; render(); };
+window.setStageFilter = (s) => { stageFilter = s; render(); };
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  clearTimeout(toastTimer);
+  document.querySelectorAll(".toast").forEach(el => el.remove());
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.textContent = msg;
+  document.body.appendChild(el);
+  toastTimer = setTimeout(() => el.remove(), 2500);
+}
+
+// ── Deep link ─────────────────────────────────────────────────────────────────
+function handleDeepLink() {
+  const prospectId = new URLSearchParams(window.location.search).get("prospectId");
+  if (prospectId) window.openProspect(prospectId);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+(async () => {
+  try {
+    await load();
+    handleDeepLink();
+    render();
+  } catch (err) {
+    const root = document.getElementById("root");
+    if (root) root.innerHTML = `<div class="empty"><h3>Failed to load</h3><p>${esc(err?.message ?? "Unknown error")}</p></div>`;
+  }
+})();
+</script>
+</body>
+</html>
