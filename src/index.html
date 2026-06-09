@@ -235,6 +235,7 @@ let members   = [];
 let prospects = [];
 let votes     = [];
 let activity  = [];
+let votesMap  = new Map();
 
 let activeTab    = "pipeline";
 let showDropped  = false;
@@ -267,7 +268,7 @@ async function load() {
       : Promise.resolve({}),
     db("SELECT * FROM prospects ORDER BY created_at"),
     db("SELECT * FROM votes ORDER BY created_at"),
-    db("SELECT * FROM prospect_activity ORDER BY created_at DESC LIMIT 500"),
+    db("SELECT * FROM prospect_activity ORDER BY created_at DESC LIMIT 50"),
   ]);
 
   members = ctxRes["family.members"] ?? DEMO_MEMBERS;
@@ -281,6 +282,7 @@ async function load() {
     votes     = DEMO_VOTES;
     activity  = DEMO_ACTIVITY;
   }
+  buildVotesMap();
 }
 
 async function reload() {
@@ -288,11 +290,12 @@ async function reload() {
   const [prospectsRes, votesRes, activityRes] = await Promise.all([
     db("SELECT * FROM prospects ORDER BY created_at"),
     db("SELECT * FROM votes ORDER BY created_at"),
-    db("SELECT * FROM prospect_activity ORDER BY created_at DESC LIMIT 500"),
+    db("SELECT * FROM prospect_activity ORDER BY created_at DESC LIMIT 50"),
   ]);
   prospects = prospectsRes.rows ?? [];
   votes     = votesRes.rows ?? [];
   activity  = activityRes.rows ?? [];
+  buildVotesMap();
 }
 
 // ── CRUD ──────────────────────────────────────────────────────────────────────
@@ -347,8 +350,16 @@ async function logActivity(prospectId, action, detail) {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function votesFor(prospectId) { return votes.filter(v => v.prospect_id === prospectId); }
-function myVote(prospectId)   { return votes.find(v => v.prospect_id === prospectId && v.voter_id === ME?.id)?.vote ?? null; }
+function buildVotesMap() {
+  votesMap = new Map();
+  for (const v of votes) {
+    const arr = votesMap.get(v.prospect_id);
+    if (arr) arr.push(v);
+    else votesMap.set(v.prospect_id, [v]);
+  }
+}
+function votesFor(prospectId) { return votesMap.get(prospectId) ?? []; }
+function myVote(prospectId)   { return votesFor(prospectId).find(v => v.voter_id === ME?.id)?.vote ?? null; }
 function memberName(id)       { return members.find(m => m.id === id)?.name ?? null; }
 function mcolor(id)           { return memberColor(id, members); }
 
@@ -693,37 +704,39 @@ window.setProspectStage = function(stage) {
 
 window.submitVote = async function(prospectId, vote) {
   if (!ME || !DB) return;
-  const btn = modalEl?.querySelector(`.vote-btn.${vote}`);
-  if (btn) { btn.disabled = true; }
-  await castVote(prospectId, vote);
-  await reload();
-  // Re-render vote section in-place
-  if (modalProspect) {
-    const pVotes = votesFor(prospectId);
-    const tally  = tallyVotes(pVotes);
-    const myV    = myVote(prospectId);
-    document.querySelectorAll(".vote-btn").forEach(b => {
-      const v = [...b.classList].find(c => ["yes","no","abstain"].includes(c));
-      if (!v) return;
-      b.disabled = false;
-      b.className = `vote-btn ${v}${myV === v ? " active" : ""}`;
-    });
-    const tallyEl = modalEl?.querySelector(".vote-tally");
-    if (tallyEl) {
-      tallyEl.innerHTML = `
-        <span class="vote-tally-item"><span class="vote-dot" style="background:var(--green)"></span> ${tally.yes} yes</span>
-        <span class="vote-tally-item"><span class="vote-dot" style="background:var(--red)"></span> ${tally.no} no</span>
-        <span class="vote-tally-item"><span class="vote-dot" style="background:#9ca3af"></span> ${tally.abstain} abstain</span>`;
-    }
+
+  // Optimistic: update local votes immediately
+  const existing = votes.find(v => v.prospect_id === prospectId && v.voter_id === ME.id);
+  if (existing) {
+    existing.vote = vote;
+    existing.updated_at = new Date().toISOString();
+  } else {
+    votes.push({ id: crypto.randomUUID(), prospect_id: prospectId, voter_id: ME.id, vote, notes: "", created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
   }
+  buildVotesMap();
+
+  // Update vote UI in-place immediately
+  const tally = tallyVotes(votesFor(prospectId));
+  document.querySelectorAll(".vote-btn").forEach(b => {
+    const v = ["yes","no","abstain"].find(c => b.classList.contains(c));
+    if (!v) return;
+    b.className = `vote-btn ${v}${vote === v ? " active" : ""}`;
+  });
+  const tallyEl = modalEl?.querySelector(".vote-tally");
+  if (tallyEl) {
+    tallyEl.innerHTML = `
+      <span class="vote-tally-item"><span class="vote-dot" style="background:var(--green)"></span> ${tally.yes} yes</span>
+      <span class="vote-tally-item"><span class="vote-dot" style="background:var(--red)"></span> ${tally.no} no</span>
+      <span class="vote-tally-item"><span class="vote-dot" style="background:#9ca3af"></span> ${tally.abstain} abstain</span>`;
+  }
+
+  // Persist in background — no reload() needed since we already updated local state
+  castVote(prospectId, vote).catch(() => {});
 };
 
 window.saveProspect = async function(existingId) {
   const name = document.getElementById("f-name")?.value.trim();
   if (!name) { document.getElementById("f-name")?.focus(); return; }
-
-  const btn = modalEl?.querySelector(".modal-footer .btn-primary");
-  if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
 
   const prevStage = !modalIsNew ? prospects.find(p => p.id === existingId)?.stage : null;
   const fields = {
@@ -735,23 +748,49 @@ window.saveProspect = async function(existingId) {
     notes:   document.getElementById("f-notes")?.value || "",
   };
 
-  try {
-    if (modalIsNew) {
-      await createProspect(fields);
-      showToast("Prospect added");
-    } else {
+  if (modalIsNew) {
+    // Optimistic: add immediately, persist in background
+    const id = crypto.randomUUID();
+    const ts = new Date().toISOString();
+    const optimistic = { id, ...fields, created_by: ME?.id || null, created_at: ts, updated_at: ts };
+    prospects = [optimistic, ...prospects];
+    votesMap.set(id, []);
+    closeModal();
+    render();
+    showToast("Prospect added");
+
+    try {
+      await db(
+        `INSERT INTO prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id, fields.name, fields.year, fields.contact, fields.source, fields.stage, fields.notes, ME?.id || null, ts, ts]
+      );
+      await logActivity(id, "prospect_added", `Added ${fields.name}`);
+    } catch {
+      prospects = prospects.filter(p => p.id !== id);
+      votesMap.delete(id);
+      render();
+      showToast("Failed to save — please try again");
+    }
+  } else {
+    // Optimistic: update immediately, persist in background
+    const idx = prospects.findIndex(p => p.id === existingId);
+    const prev = idx !== -1 ? { ...prospects[idx] } : null;
+    if (idx !== -1) prospects[idx] = { ...prospects[idx], ...fields, updated_at: new Date().toISOString() };
+    closeModal();
+    render();
+    showToast("Saved");
+
+    try {
       await updateProspect(existingId, fields);
       if (prevStage && prevStage !== fields.stage) {
         await logActivity(existingId, "stage_changed", `${STAGE_LABELS[prevStage]} → ${STAGE_LABELS[fields.stage]}`);
       }
-      showToast("Saved");
+    } catch {
+      if (idx !== -1 && prev) prospects[idx] = prev;
+      render();
+      showToast("Save failed — changes reverted");
     }
-    closeModal();
-    await reload();
-    render();
-  } catch (e) {
-    if (btn) { btn.disabled = false; btn.textContent = existingId ? "Save" : "Create"; }
-    throw e;
   }
 };
 
@@ -763,11 +802,23 @@ window.confirmDelete = async function(id) {
     confirmLabel: "Delete",
     destructive: true,
   })) return;
-  await deleteProspect(id);
+
+  // Optimistic: remove immediately, persist in background
+  const removedProspect = p;
+  const removedVotes = votesMap.get(id) ?? [];
+  prospects = prospects.filter(x => x.id !== id);
+  votesMap.delete(id);
   closeModal();
-  await reload();
   render();
   showToast("Prospect deleted");
+
+  deleteProspect(id).catch(() => {
+    if (removedProspect) prospects = [removedProspect, ...prospects];
+    for (const v of removedVotes) votes.push(v);
+    buildVotesMap();
+    render();
+    showToast("Delete failed — prospect restored");
+  });
 };
 
 // ── Nav helpers ───────────────────────────────────────────────────────────────
