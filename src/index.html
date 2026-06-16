@@ -266,9 +266,9 @@ async function load() {
     CONTEXT
       ? fetch(`${CONTEXT}?keys=family.members`).then(r => r.json()).catch(() => ({}))
       : Promise.resolve({}),
-    db("SELECT * FROM prospects ORDER BY created_at"),
-    db("SELECT * FROM votes ORDER BY created_at"),
-    db("SELECT * FROM prospect_activity ORDER BY created_at DESC LIMIT 50"),
+    db("SELECT * FROM app_recruitment_tracker__prospects ORDER BY created_at"),
+    db("SELECT * FROM app_recruitment_tracker__votes ORDER BY created_at"),
+    db("SELECT * FROM app_recruitment_tracker__prospect_activity ORDER BY created_at DESC LIMIT 50"),
   ]);
 
   members = ctxRes["family.members"] ?? DEMO_MEMBERS;
@@ -288,9 +288,9 @@ async function load() {
 async function reload() {
   if (!DB) return;
   const [prospectsRes, votesRes, activityRes] = await Promise.all([
-    db("SELECT * FROM prospects ORDER BY created_at"),
-    db("SELECT * FROM votes ORDER BY created_at"),
-    db("SELECT * FROM prospect_activity ORDER BY created_at DESC LIMIT 50"),
+    db("SELECT * FROM app_recruitment_tracker__prospects ORDER BY created_at"),
+    db("SELECT * FROM app_recruitment_tracker__votes ORDER BY created_at"),
+    db("SELECT * FROM app_recruitment_tracker__prospect_activity ORDER BY created_at DESC LIMIT 50"),
   ]);
   prospects = prospectsRes.rows ?? [];
   votes     = votesRes.rows ?? [];
@@ -303,7 +303,7 @@ async function createProspect(fields) {
   const id = crypto.randomUUID();
   const ts = new Date().toISOString();
   await db(
-    `INSERT INTO prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at)
+    `INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [id, fields.name, fields.year || "", fields.contact || "", fields.source || "",
      fields.stage || "invited", fields.notes || "", ME?.id || null, ts, ts]
@@ -315,16 +315,16 @@ async function createProspect(fields) {
 async function updateProspect(id, fields) {
   const sets = Object.keys(fields).map(k => `${k} = ?`).join(", ");
   await db(
-    `UPDATE prospects SET ${sets}, updated_at = ? WHERE id = ?`,
+    `UPDATE app_recruitment_tracker__prospects SET ${sets}, updated_at = ? WHERE id = ?`,
     [...Object.values(fields), new Date().toISOString(), id]
   );
 }
 
 async function deleteProspect(id) {
   await Promise.all([
-    db("DELETE FROM prospects WHERE id = ?",          [id]),
-    db("DELETE FROM votes WHERE prospect_id = ?",     [id]),
-    db("DELETE FROM prospect_activity WHERE prospect_id = ?", [id]),
+    db("DELETE FROM app_recruitment_tracker__prospects WHERE id = ?",          [id]),
+    db("DELETE FROM app_recruitment_tracker__votes WHERE prospect_id = ?",     [id]),
+    db("DELETE FROM app_recruitment_tracker__prospect_activity WHERE prospect_id = ?", [id]),
   ]);
 }
 
@@ -332,9 +332,9 @@ async function castVote(prospectId, vote) {
   const id = crypto.randomUUID();
   const ts = new Date().toISOString();
   await db(
-    `INSERT INTO votes (id, prospect_id, voter_id, vote, notes, created_at, updated_at)
+    `INSERT INTO app_recruitment_tracker__votes (id, prospect_id, voter_id, vote, notes, created_at, updated_at)
      VALUES (?, ?, ?, ?, '', ?, ?)
-     ON CONFLICT (household_id, prospect_id, voter_id)
+     ON CONFLICT (prospect_id, voter_id)
      DO UPDATE SET vote = EXCLUDED.vote, updated_at = EXCLUDED.updated_at`,
     [id, prospectId, ME?.id || "unknown", vote, ts, ts]
   );
@@ -343,7 +343,7 @@ async function castVote(prospectId, vote) {
 async function logActivity(prospectId, action, detail) {
   const id = crypto.randomUUID();
   await db(
-    `INSERT INTO prospect_activity (id, prospect_id, actor_id, action, detail, created_at)
+    `INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at)
      VALUES (?, ?, ?, ?, ?, ?)`,
     [id, prospectId, ME?.id || null, action, detail, new Date().toISOString()]
   );
@@ -761,7 +761,7 @@ window.saveProspect = async function(existingId) {
 
     try {
       await db(
-        `INSERT INTO prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at)
+        `INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [id, fields.name, fields.year, fields.contact, fields.source, fields.stage, fields.notes, ME?.id || null, ts, ts]
       );

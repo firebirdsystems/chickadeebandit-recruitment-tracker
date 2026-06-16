@@ -1,4 +1,4 @@
-INSERT INTO prospects (
+INSERT INTO app_recruitment_tracker__prospects (
   id,
   name,
   year,
@@ -10,7 +10,7 @@ INSERT INTO prospects (
   created_at,
   updated_at
 ) VALUES (
-  gen_random_uuid()::text,
+  gen_random_uuid(),
   $1,
   COALESCE($2, ''),
   COALESCE($3, ''),
@@ -18,7 +18,7 @@ INSERT INTO prospects (
   'invited',
   '',
   'ai',
-  NOW()::text,
-  NOW()::text
+  datetime('now'),
+  datetime('now')
 )
-ON CONFLICT (household_id, id) DO NOTHING
+ON CONFLICT (id) DO NOTHING

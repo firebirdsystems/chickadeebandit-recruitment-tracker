@@ -9,11 +9,9 @@ SELECT
   COUNT(CASE WHEN v.vote = 'yes'     THEN 1 END) AS votes_yes,
   COUNT(CASE WHEN v.vote = 'no'      THEN 1 END) AS votes_no,
   COUNT(CASE WHEN v.vote = 'abstain' THEN 1 END) AS votes_abstain
-FROM prospects p
-LEFT JOIN votes v
+FROM app_recruitment_tracker__prospects p
+LEFT JOIN app_recruitment_tracker__votes v
   ON v.prospect_id   = p.id
- AND v.household_id  = p.household_id
-WHERE p.household_id = current_setting('app.household_id', true)::uuid
 GROUP BY p.id, p.name, p.year, p.stage, p.source, p.notes, p.created_at
 ORDER BY
   CASE p.stage
