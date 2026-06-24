@@ -7,17 +7,19 @@ INSERT INTO app_recruitment_tracker__prospects (
   stage,
   notes,
   created_by,
+  visibility,
   created_at,
   updated_at
 ) VALUES (
-  gen_random_uuid(),
-  $1,
-  COALESCE($2, ''),
-  COALESCE($3, ''),
+  lower(hex(randomblob(16))),
+  ?,
+  COALESCE(?, ''),
+  COALESCE(?, ''),
   '',
   'invited',
   '',
   'ai',
+  'everyone',
   datetime('now'),
   datetime('now')
 )
