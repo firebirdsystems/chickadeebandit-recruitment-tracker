@@ -2,19 +2,23 @@ SELECT
   p.id,
   p.name,
   p.year,
-  p.stage,
+  -- Effective stage: a committee decision (bid/pledged) overrides the owner's
+  -- pipeline stage. Owners cannot self-advance, so trust the decisions table.
+  COALESCE(d.decision, p.stage) AS stage,
   p.source,
   p.notes,
   p.created_at,
-  COUNT(CASE WHEN v.vote = 'yes'     THEN 1 END) AS votes_yes,
-  COUNT(CASE WHEN v.vote = 'no'      THEN 1 END) AS votes_no,
-  COUNT(CASE WHEN v.vote = 'abstain' THEN 1 END) AS votes_abstain
+  COUNT(CASE WHEN b.vote = 'yes'     THEN 1 END) AS votes_yes,
+  COUNT(CASE WHEN b.vote = 'no'      THEN 1 END) AS votes_no,
+  COUNT(CASE WHEN b.vote = 'abstain' THEN 1 END) AS votes_abstain
 FROM app_recruitment_tracker__prospects p
-LEFT JOIN app_recruitment_tracker__votes v
-  ON v.prospect_id   = p.id
-GROUP BY p.id, p.name, p.year, p.stage, p.source, p.notes, p.created_at
+LEFT JOIN app_recruitment_tracker__ballots b
+  ON b.prospect_id   = p.id
+LEFT JOIN app_recruitment_tracker__decisions d
+  ON d.prospect_id   = p.id
+GROUP BY p.id, p.name, p.year, COALESCE(d.decision, p.stage), p.source, p.notes, p.created_at
 ORDER BY
-  CASE p.stage
+  CASE COALESCE(d.decision, p.stage)
     WHEN 'invited'  THEN 1
     WHEN 'rushed'   THEN 2
     WHEN 'bid'      THEN 3

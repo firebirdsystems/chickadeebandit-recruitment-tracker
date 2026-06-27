@@ -1,9 +1,38 @@
 import { describe, it, expect } from "vitest";
 import {
   STAGES, ACTIVE_STAGES, STAGE_LABELS, STAGE_COLORS,
+  PIPELINE_STAGES, DECISION_STAGES, effectiveStage,
   YEAR_OPTIONS, VOTE_LABELS, VOTE_COLORS,
   tallyVotes, prospectsByStage, sortProspects,
 } from "../src/logic.js";
+
+// ── effectiveStage (formal-decision derivation) ───────────────────────────────
+
+describe("effectiveStage", () => {
+  it("uses the owner pipeline stage when there is no committee decision", () => {
+    expect(effectiveStage("invited", undefined)).toBe("invited");
+    expect(effectiveStage("rushed", null)).toBe("rushed");
+    expect(effectiveStage("dropped", undefined)).toBe("dropped");
+  });
+
+  it("lets a committee decision override the owner stage", () => {
+    expect(effectiveStage("rushed", "bid")).toBe("bid");
+    expect(effectiveStage("invited", "pledged")).toBe("pledged");
+  });
+
+  it("clamps a forged bid/pledged owner stage down to rushed (no self-advancement)", () => {
+    // An owner can write their own prospects.stage via direct SQL, but without a
+    // committee decision it must never read back as advanced.
+    expect(effectiveStage("bid", undefined)).toBe("rushed");
+    expect(effectiveStage("pledged", null)).toBe("rushed");
+  });
+
+  it("keeps pipeline and decision stages disjoint", () => {
+    expect(PIPELINE_STAGES).toEqual(["invited", "rushed", "dropped"]);
+    expect(DECISION_STAGES).toEqual(["bid", "pledged"]);
+    expect(PIPELINE_STAGES.some(s => DECISION_STAGES.includes(s))).toBe(false);
+  });
+});
 
 // ── tallyVotes ────────────────────────────────────────────────────────────────
 

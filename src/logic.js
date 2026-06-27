@@ -3,6 +3,22 @@ export { memberColor, initial, esc, isAdult, formatRelativeDate } from "./shared
 export const STAGES        = ["invited", "rushed", "bid", "pledged", "dropped"];
 export const ACTIVE_STAGES = ["invited", "rushed", "bid", "pledged"];
 
+// Stage governance split: owners manage the early pipeline; only the committee
+// may issue the formal advancement decisions. Used to keep the UI honest with the
+// server policies (prospects.write_owner_only vs decisions.insert_privileged_only).
+export const PIPELINE_STAGES = ["invited", "rushed", "dropped"]; // owner-settable
+export const DECISION_STAGES = ["bid", "pledged"];               // committee-only
+
+/**
+ * Effective stage for a prospect. A committee decision (bid/pledged) is
+ * authoritative; otherwise the owner-controlled stage applies, with any forged
+ * bid/pledged value (an owner can write their own row) clamped down to "rushed".
+ */
+export function effectiveStage(rawStage, decision) {
+  if (decision) return decision;
+  return DECISION_STAGES.includes(rawStage) ? "rushed" : rawStage;
+}
+
 export const STAGE_LABELS = {
   invited: "Invited",
   rushed:  "Rushed",

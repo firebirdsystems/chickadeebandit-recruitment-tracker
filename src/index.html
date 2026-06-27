@@ -171,7 +171,10 @@
 <div class="app">
   <div class="header">
     <h1>🎓 Recruitment</h1>
-    <button class="btn-primary" onclick="openNewProspect()">+ Add Prospect</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn-ghost" id="committee-btn" style="display:none" onclick="openCommitteeConfig()" title="Recruitment committee">⚙︎ Committee</button>
+      <button class="btn-primary" onclick="openNewProspect()">+ Add Prospect</button>
+    </div>
   </div>
   <div class="tabs">
     <button class="tab active" id="tab-pipeline"  onclick="setTab('pipeline')">Pipeline</button>
@@ -185,13 +188,17 @@
 import { memberColor, initial, esc, isAdult, hubConfirm, formatRelativeDate } from "/hub-sdk.js";
 import {
   STAGES, ACTIVE_STAGES, STAGE_LABELS, STAGE_COLORS,
+  PIPELINE_STAGES, DECISION_STAGES, effectiveStage,
   YEAR_OPTIONS, VOTE_LABELS, VOTE_COLORS,
   tallyVotes, prospectsByStage, sortProspects,
 } from "./logic.js";
 
 const CONTEXT = window.__CONTEXT_URL ?? "";
 const DB      = window.__DB_URL      ?? "";
+const SUBMIT_RESPONSE_URL = window.__SUBMIT_RESPONSE_URL ?? "";
+const ADMIN_CONFIG = window.__ADMIN_CONFIG_URL ?? "";
 const ME      = window.__CURRENT_MEMBER ?? null;
+const IS_ADMIN = !!ME?.isAdmin;
 const APP_ID  = window.__APP_ID ?? "recruitment-tracker";
 
 // ── Demo data ─────────────────────────────────────────────────────────────────
@@ -210,15 +217,16 @@ const DEMO_PROSPECTS = [
   { id: "dp6", name: "Blake Turner",  year: "Sophomore", contact: "",                   source: "",            stage: "dropped",  notes: "No longer interested — schedule conflicts.", created_by: "dm2", created_at: "2026-01-12T10:00:00Z", updated_at: "2026-01-15T16:00:00Z" },
 ];
 
-const DEMO_VOTES = [
-  { id: "dv1", prospect_id: "dp4", voter_id: "dm1", vote: "yes",     notes: "", created_at: "2026-01-17T10:00:00Z", updated_at: "2026-01-17T10:00:00Z" },
-  { id: "dv2", prospect_id: "dp4", voter_id: "dm2", vote: "yes",     notes: "", created_at: "2026-01-17T11:00:00Z", updated_at: "2026-01-17T11:00:00Z" },
-  { id: "dv3", prospect_id: "dp4", voter_id: "dm3", vote: "abstain", notes: "", created_at: "2026-01-17T12:00:00Z", updated_at: "2026-01-17T12:00:00Z" },
-  { id: "dv4", prospect_id: "dp5", voter_id: "dm1", vote: "yes",     notes: "", created_at: "2026-01-18T09:00:00Z", updated_at: "2026-01-18T09:00:00Z" },
-  { id: "dv5", prospect_id: "dp5", voter_id: "dm2", vote: "yes",     notes: "", created_at: "2026-01-18T10:00:00Z", updated_at: "2026-01-18T10:00:00Z" },
-  { id: "dv6", prospect_id: "dp5", voter_id: "dm3", vote: "yes",     notes: "", created_at: "2026-01-18T11:00:00Z", updated_at: "2026-01-18T11:00:00Z" },
-  { id: "dv7", prospect_id: "dp2", voter_id: "dm1", vote: "yes",     notes: "", created_at: "2026-01-16T12:00:00Z", updated_at: "2026-01-16T12:00:00Z" },
-  { id: "dv8", prospect_id: "dp2", voter_id: "dm3", vote: "no",      notes: "", created_at: "2026-01-16T13:00:00Z", updated_at: "2026-01-16T13:00:00Z" },
+// Anonymous ballots — no voter id (mirrors the secret-ballot DB shape).
+const DEMO_BALLOTS = [
+  { id: "db1", prospect_id: "dp4", vote: "yes",     created_at: "2026-01-17T10:00:00Z" },
+  { id: "db2", prospect_id: "dp4", vote: "yes",     created_at: "2026-01-17T11:00:00Z" },
+  { id: "db3", prospect_id: "dp4", vote: "abstain", created_at: "2026-01-17T12:00:00Z" },
+  { id: "db4", prospect_id: "dp5", vote: "yes",     created_at: "2026-01-18T09:00:00Z" },
+  { id: "db5", prospect_id: "dp5", vote: "yes",     created_at: "2026-01-18T10:00:00Z" },
+  { id: "db6", prospect_id: "dp5", vote: "yes",     created_at: "2026-01-18T11:00:00Z" },
+  { id: "db7", prospect_id: "dp2", vote: "yes",     created_at: "2026-01-16T12:00:00Z" },
+  { id: "db8", prospect_id: "dp2", vote: "no",      created_at: "2026-01-16T13:00:00Z" },
 ];
 
 const DEMO_ACTIVITY = [
@@ -230,12 +238,47 @@ const DEMO_ACTIVITY = [
   { id: "da6", prospect_id: "dp4", actor_id: "dm3", action: "prospect_added", detail: "Added Drew Santos",         created_at: "2026-01-10T09:00:00Z" },
 ];
 
+// Committee decisions (the only source of bid/pledged). dp4 was bid, dp5 pledged.
+const DEMO_DECISIONS = [
+  { prospect_id: "dp4", decision: "bid",     decided_by: "dm3", decided_at: "2026-01-17T10:00:00Z" },
+  { prospect_id: "dp5", decision: "pledged", decided_by: "dm1", decided_at: "2026-01-18T09:00:00Z" },
+];
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let members   = [];
-let prospects = [];
-let votes     = [];
+let prospects = [];          // raw rows (prospects.stage = owner pipeline stage)
+let displayProspects = [];   // prospects with `stage` replaced by effective stage
+let decisionMap = new Map(); // prospect_id -> { decision, decided_by, decided_at } (committee-only)
+let ballots   = [];          // anonymous cast votes (no voter id)
+let myReceipts = new Set();  // prospect ids the current member has voted on
 let activity  = [];
 let votesMap  = new Map();
+let groups    = [];          // family.groups [{ id, name, memberIds }]
+let committeeGroupId = "";   // configured Recruitment Committee group (server-enforced)
+
+// Effective stage = committee decision if any, else owner pipeline stage (clamped).
+function effStage(p) { return effectiveStage(p.stage, decisionMap.get(p.id)?.decision); }
+function isDecided(p) { return decisionMap.has(p.id); }
+// Rebuild the display view whenever prospects or decisions change.
+function rebuildDerived() {
+  displayProspects = prospects.map(p => ({ ...p, stage: effStage(p) }));
+}
+
+// A prospect's records (stage/notes/delete) may be written by its creator OR by a
+// member of the configured committee group — exactly what the prospects row policy
+// (write_owner_only + bypass_group_setting) enforces server-side. Mirror it in the
+// UI so we don't show edit controls that would 403. New prospects: anyone may add.
+function amICommittee() {
+  if (!DB) return true;                       // demo
+  if (!committeeGroupId || !ME) return false;
+  const g = groups.find(g => g.id === committeeGroupId);
+  return !!g && g.memberIds.includes(ME.id);
+}
+function canManage(p) {
+  if (!p || !p.id) return true;               // creating a new prospect
+  if (!ME) return false;
+  return p.created_by === ME.id || amICommittee();
+}
 
 let activeTab    = "pipeline";
 let showDropped  = false;
@@ -262,39 +305,59 @@ async function db(sql, params = []) {
 
 // ── Data loading ──────────────────────────────────────────────────────────────
 async function load() {
-  const [ctxRes, prospectsRes, votesRes, activityRes] = await Promise.all([
+  const [ctxRes, prospectsRes, ballotsRes, receiptsRes, activityRes, settingsRes, decisionsRes] = await Promise.all([
     CONTEXT
-      ? fetch(`${CONTEXT}?keys=family.members`).then(r => r.json()).catch(() => ({}))
+      ? fetch(`${CONTEXT}?keys=family.members,family.groups`).then(r => r.json()).catch(() => ({}))
       : Promise.resolve({}),
     db("SELECT * FROM app_recruitment_tracker__prospects ORDER BY created_at"),
-    db("SELECT * FROM app_recruitment_tracker__votes ORDER BY created_at"),
+    // ballots are endpoint_only (read: everyone) and carry NO voter id, so this
+    // returns anonymous votes for tallying without revealing who cast them.
+    db("SELECT id, prospect_id, vote, created_at FROM app_recruitment_tracker__ballots"),
+    // vote_receipts are owner_only — this only ever returns MY own receipts, i.e.
+    // which prospects I've already voted on (used to show a "voted" state).
+    db("SELECT prospect_id FROM app_recruitment_tracker__vote_receipts"),
     db("SELECT * FROM app_recruitment_tracker__prospect_activity ORDER BY created_at DESC LIMIT 50"),
+    db("SELECT value FROM app_recruitment_tracker__settings WHERE key = 'committee_group_id'"),
+    // decisions are inherit_visibility (everyone reads), committee-only writes.
+    db("SELECT prospect_id, decision, decided_by, decided_at FROM app_recruitment_tracker__decisions"),
   ]);
 
   members = ctxRes["family.members"] ?? DEMO_MEMBERS;
+  groups  = ctxRes["family.groups"] ?? [];
 
   if (DB) {
     prospects = prospectsRes.rows ?? [];
-    votes     = votesRes.rows ?? [];
+    ballots   = ballotsRes.rows ?? [];
+    myReceipts = new Set((receiptsRes.rows ?? []).map(r => r.prospect_id));
     activity  = activityRes.rows ?? [];
+    committeeGroupId = settingsRes.rows?.[0]?.value ?? "";
+    decisionMap = new Map((decisionsRes.rows ?? []).map(d => [d.prospect_id, d]));
   } else {
     prospects = DEMO_PROSPECTS;
-    votes     = DEMO_VOTES;
+    ballots   = DEMO_BALLOTS;
+    myReceipts = new Set();
     activity  = DEMO_ACTIVITY;
+    decisionMap = new Map(DEMO_DECISIONS.map(d => [d.prospect_id, d]));
   }
+  rebuildDerived();
   buildVotesMap();
 }
 
 async function reload() {
   if (!DB) return;
-  const [prospectsRes, votesRes, activityRes] = await Promise.all([
+  const [prospectsRes, ballotsRes, receiptsRes, activityRes, decisionsRes] = await Promise.all([
     db("SELECT * FROM app_recruitment_tracker__prospects ORDER BY created_at"),
-    db("SELECT * FROM app_recruitment_tracker__votes ORDER BY created_at"),
+    db("SELECT id, prospect_id, vote, created_at FROM app_recruitment_tracker__ballots"),
+    db("SELECT prospect_id FROM app_recruitment_tracker__vote_receipts"),
     db("SELECT * FROM app_recruitment_tracker__prospect_activity ORDER BY created_at DESC LIMIT 50"),
+    db("SELECT prospect_id, decision, decided_by, decided_at FROM app_recruitment_tracker__decisions"),
   ]);
   prospects = prospectsRes.rows ?? [];
-  votes     = votesRes.rows ?? [];
+  ballots   = ballotsRes.rows ?? [];
+  myReceipts = new Set((receiptsRes.rows ?? []).map(r => r.prospect_id));
   activity  = activityRes.rows ?? [];
+  decisionMap = new Map((decisionsRes.rows ?? []).map(d => [d.prospect_id, d]));
+  rebuildDerived();
   buildVotesMap();
 }
 
@@ -321,23 +384,31 @@ async function updateProspect(id, fields) {
 }
 
 async function deleteProspect(id) {
+  // ballots + vote_receipts are written only by the hub anonymous_responses
+  // endpoint and are not app-deletable (endpoint_only / endpoint_writes_only).
+  // Their rows for a deleted prospect become harmless orphans — they carry no
+  // voter id and are never displayed once the prospect is gone.
   await Promise.all([
     db("DELETE FROM app_recruitment_tracker__prospects WHERE id = ?",          [id]),
-    db("DELETE FROM app_recruitment_tracker__votes WHERE prospect_id = ?",     [id]),
     db("DELETE FROM app_recruitment_tracker__prospect_activity WHERE prospect_id = ?", [id]),
   ]);
 }
 
+// Cast a SECRET ballot through the hub anonymous_responses endpoint. The server
+// records an immutable receipt (so this member can't vote twice) and inserts a
+// ballot row that has no voter id — so no one, including admins, can ever link
+// this member to their selection. Votes are one-shot and cannot be changed.
 async function castVote(prospectId, vote) {
-  const id = crypto.randomUUID();
-  const ts = new Date().toISOString();
-  await db(
-    `INSERT INTO app_recruitment_tracker__votes (id, prospect_id, voter_id, vote, notes, created_at, updated_at)
-     VALUES (?, ?, ?, ?, '', ?, ?)
-     ON CONFLICT (prospect_id, voter_id)
-     DO UPDATE SET vote = EXCLUDED.vote, updated_at = EXCLUDED.updated_at`,
-    [id, prospectId, ME?.id || "unknown", vote, ts, ts]
-  );
+  const res = await fetch(SUBMIT_RESPONSE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_id: prospectId, responses: [{ answer: vote }] }),
+  });
+  if (!res.ok) {
+    let msg = "Could not record vote";
+    try { const j = await res.json(); if (j.already_responded) msg = "You've already voted on this prospect"; else if (j.error) msg = j.error; } catch {}
+    throw new Error(msg);
+  }
 }
 
 async function logActivity(prospectId, action, detail) {
@@ -349,17 +420,37 @@ async function logActivity(prospectId, action, detail) {
   );
 }
 
+// Record a formal advancement decision (bid/pledged). Writes to the committee-only
+// `decisions` table — the server (inherit_visibility + insert_privileged_only)
+// rejects this for anyone outside the configured committee group, so a prospect's
+// owner cannot advance their own person. decided_by is forced to the caller server-side.
+async function persistDecision(prospectId, decision) {
+  const now = new Date().toISOString();
+  await db(
+    `INSERT OR REPLACE INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at)
+     VALUES (?, ?, ?, ?)`,
+    [prospectId, decision, ME?.id || "", now]
+  );
+}
+
+async function clearDecisionRow(prospectId) {
+  // Only the committee (or the original decider) may delete a decision row — the
+  // inherit_visibility writer rules block an owner from clearing one.
+  await db("DELETE FROM app_recruitment_tracker__decisions WHERE prospect_id = ?", [prospectId]);
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function buildVotesMap() {
   votesMap = new Map();
-  for (const v of votes) {
+  for (const v of ballots) {
     const arr = votesMap.get(v.prospect_id);
     if (arr) arr.push(v);
     else votesMap.set(v.prospect_id, [v]);
   }
 }
 function votesFor(prospectId) { return votesMap.get(prospectId) ?? []; }
-function myVote(prospectId)   { return votesFor(prospectId).find(v => v.voter_id === ME?.id)?.vote ?? null; }
+// Secret ballot: we can only know IF I voted (from my receipt), never which way.
+function hasVoted(prospectId) { return myReceipts.has(prospectId); }
 function memberName(id)       { return members.find(m => m.id === id)?.name ?? null; }
 function mcolor(id)           { return memberColor(id, members); }
 
@@ -376,6 +467,7 @@ function renderTallyChips(tally) {
 function render() {
   const root = document.getElementById("root");
   if (!root) return;
+  rebuildDerived();
 
   if (activeTab === "pipeline")  root.innerHTML = renderPipeline();
   else if (activeTab === "prospects") root.innerHTML = renderProspectsList();
@@ -390,7 +482,7 @@ function render() {
 // ── Pipeline tab ──────────────────────────────────────────────────────────────
 function renderPipeline() {
   const activeCols = ACTIVE_STAGES.map(s => renderColumn(s)).join("");
-  const dropped    = prospectsByStage(prospects, "dropped");
+  const dropped    = prospectsByStage(displayProspects, "dropped");
   const droppedSection = `
     <div class="dropped-row">
       <button class="toggle-dropped" onclick="toggleDropped()">
@@ -416,9 +508,14 @@ function renderPipeline() {
 }
 
 function renderColumn(stage) {
-  const ps    = prospectsByStage(prospects, stage);
+  const ps    = prospectsByStage(displayProspects, stage);
   const color = STAGE_COLORS[stage];
   const label = STAGE_LABELS[stage];
+  // New prospects can only enter the owner-managed pipeline (invited/rushed).
+  // bid/pledged are committee decisions, so those columns get no quick-add.
+  const addBtn = PIPELINE_STAGES.includes(stage)
+    ? `<button class="col-add" title="Add prospect to ${label}" onclick="openNewProspect('${stage}')">+</button>`
+    : "";
 
   return `
     <div class="pipeline-col">
@@ -428,7 +525,7 @@ function renderColumn(stage) {
           ${esc(label)}
           <span class="col-count">${ps.length}</span>
         </div>
-        <button class="col-add" title="Add prospect to ${label}" onclick="openNewProspect('${stage}')">+</button>
+        ${addBtn}
       </div>
       <div class="pipeline-col-body">
         ${ps.length === 0
@@ -459,7 +556,7 @@ function renderCard(p, compact = false) {
 // ── Prospects list tab ────────────────────────────────────────────────────────
 function renderProspectsList() {
   const query  = searchQuery.toLowerCase();
-  let filtered = sortProspects(prospects);
+  let filtered = sortProspects(displayProspects);
   if (stageFilter !== "all") filtered = filtered.filter(p => p.stage === stageFilter);
   if (query) filtered = filtered.filter(p =>
     p.name.toLowerCase().includes(query) ||
@@ -469,7 +566,7 @@ function renderProspectsList() {
 
   const chips = ["all", ...STAGES].map(s => {
     const label = s === "all" ? "All" : STAGE_LABELS[s];
-    const count = s === "all" ? prospects.length : prospects.filter(p => p.stage === s).length;
+    const count = s === "all" ? displayProspects.length : displayProspects.filter(p => p.stage === s).length;
     return `<button class="chip ${stageFilter === s ? "active" : ""}" onclick="setStageFilter('${s}')">
       ${esc(label)} <span style="font-size:.7rem;opacity:.7">${count}</span>
     </button>`;
@@ -506,7 +603,7 @@ function renderProspectsList() {
 
 // ── Votes tab ─────────────────────────────────────────────────────────────────
 function renderVotesTab() {
-  const active = sortProspects(prospects.filter(p => p.stage !== "dropped"));
+  const active = sortProspects(displayProspects.filter(p => p.stage !== "dropped"));
   if (active.length === 0) {
     return `<div class="empty"><h3>No prospects yet</h3><p>Add prospects to start tracking votes.</p></div>`;
   }
@@ -573,32 +670,82 @@ function closeModal() { modalEl?.remove(); modalEl = null; }
 function buildProspectModal(p, isNew) {
   const pVotes    = votesFor(p.id);
   const tally     = tallyVotes(pVotes);
-  const myV       = myVote(p.id);
+  const voted     = hasVoted(p.id);
   const pActivity = activity
     .filter(a => a.prospect_id === p.id)
     .slice(0, 20);
 
-  const stagePills = STAGES.map(s => `
-    <button class="stage-pill ${p.stage === s ? "active" : ""}" data-stage="${s}"
-      style="${p.stage === s ? `background:${STAGE_COLORS[s]};border-color:${STAGE_COLORS[s]}` : ""}"
+  // Stage governance: owners move the early pipeline (invited/rushed/dropped);
+  // bid/pledged are committee decisions in a separate, committee-only table.
+  const decision  = decisionMap.get(p.id);
+  const decided   = isDecided(p);
+  const eff       = effStage(p);
+  const committee = amICommittee();
+  const effBadge  = `<span class="stage-badge" style="background:${STAGE_COLORS[eff]}">${esc(STAGE_LABELS[eff])}</span>`;
+  const deciderName = decision?.decided_by ? (memberName(decision.decided_by) ?? "Committee") : "Committee";
+
+  const activePipe = PIPELINE_STAGES.includes(p.stage) ? p.stage : "rushed";
+  const pipelinePills = PIPELINE_STAGES.map(s => `
+    <button class="stage-pill ${activePipe === s ? "active" : ""}" data-stage="${s}"
+      style="${activePipe === s ? `background:${STAGE_COLORS[s]};border-color:${STAGE_COLORS[s]}` : ""}"
       onclick="setProspectStage('${s}')">${esc(STAGE_LABELS[s])}</button>
   `).join("");
 
-  const voteSection = ME ? `
-    <div class="section-divider"></div>
-    <div class="vote-section">
-      <div class="section-title">Your Vote</div>
-      <div class="vote-btns">
+  // Stage editor for managers: pipeline pills while undecided, otherwise a locked
+  // committee badge (only the committee can change a formal decision).
+  const stageEditor = decided
+    ? `<div class="field">
+        <label>Stage</label>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${effBadge}
+          <span style="font-size:.74rem;color:var(--muted)">Committee decision · ${esc(deciderName)}</span></div>
+        ${committee ? "" : `<p style="font-size:.72rem;color:var(--muted);margin-top:6px">Only the committee can change a formal decision.</p>`}
+      </div>`
+    : `<div class="field">
+        <label>Stage</label>
+        <div class="stage-pills" id="stage-pills">${pipelinePills}</div>
+      </div>`;
+
+  // Committee-only decision controls (the server rejects these for non-committee
+  // callers via decisions.insert_privileged_only, so we only show them here).
+  const decisionControls = (committee && !isNew) ? `
+    <div class="field">
+      <label>Committee Decision</label>
+      <div class="stage-pills">
+        ${DECISION_STAGES.map(s => `
+          <button class="stage-pill ${decision?.decision === s ? "active" : ""}"
+            style="${decision?.decision === s ? `background:${STAGE_COLORS[s]};border-color:${STAGE_COLORS[s]}` : ""}"
+            onclick="issueDecision('${p.id}','${s}')">${esc(STAGE_LABELS[s])}</button>`).join("")}
+        ${decided ? `<button class="stage-pill" onclick="clearDecision('${p.id}')">↩︎ Clear</button>` : ""}
+      </div>
+      <p style="font-size:.72rem;color:var(--muted);margin-top:6px">Advancing to Bid or Pledged is a formal committee action.</p>
+    </div>` : "";
+
+  const tallyHtml = `
+    <div class="vote-tally">
+      <span class="vote-tally-item"><span class="vote-dot" style="background:var(--green)"></span> ${tally.yes} yes</span>
+      <span class="vote-tally-item"><span class="vote-dot" style="background:var(--red)"></span> ${tally.no} no</span>
+      <span class="vote-tally-item"><span class="vote-dot" style="background:#9ca3af"></span> ${tally.abstain} abstain</span>
+    </div>`;
+
+  // Secret ballot: a member casts once and the choice is never stored against
+  // their identity, so we can show that they've voted but not which way.
+  const voteControls = voted
+    ? `<p class="activity-empty" id="vote-state">✓ Your vote has been recorded — ballots are secret.</p>`
+    : `
+      <div class="vote-btns" id="vote-btns">
         ${["yes","no","abstain"].map(v => `
-          <button class="vote-btn ${v}${myV === v ? " active" : ""}" onclick="submitVote('${p.id}','${v}')">
+          <button class="vote-btn ${v}" onclick="submitVote('${p.id}','${v}')">
             ${{ yes: "✓ Yes", no: "✗ No", abstain: "○ Abstain" }[v]}
           </button>`).join("")}
       </div>
-      <div class="vote-tally">
-        <span class="vote-tally-item"><span class="vote-dot" style="background:var(--green)"></span> ${tally.yes} yes</span>
-        <span class="vote-tally-item"><span class="vote-dot" style="background:var(--red)"></span> ${tally.no} no</span>
-        <span class="vote-tally-item"><span class="vote-dot" style="background:#9ca3af"></span> ${tally.abstain} abstain</span>
-      </div>
+      <p style="font-size:.72rem;color:var(--muted);margin-bottom:10px">Votes are secret and can't be changed once cast.</p>`;
+
+  const voteSection = (ME && !isNew) ? `
+    <div class="section-divider"></div>
+    <div class="vote-section">
+      <div class="section-title">Your Vote</div>
+      ${voteControls}
+      ${tallyHtml}
     </div>` : "";
 
   const activityHtml = !isNew ? `
@@ -622,12 +769,12 @@ function buildProspectModal(p, isNew) {
       }
     </div>` : "";
 
-  return `
-    <div class="modal-header">
-      <span class="modal-title">${isNew ? "New Prospect" : "Edit Prospect"}</span>
-      <button class="modal-close" onclick="closeModal()">×</button>
-    </div>
-    <div class="modal-body">
+  // Edit controls are shown only to those the server will accept as writers
+  // (the prospect's creator or a committee member). Everyone else gets a
+  // read-only view — but can still cast a secret vote.
+  const manage = canManage(p);
+
+  const editableBody = `
       <div class="field">
         <label>Name</label>
         <input type="text" id="f-name" value="${esc(p.name)}" placeholder="Full name" />
@@ -649,17 +796,31 @@ function buildProspectModal(p, isNew) {
         <label>Referred by</label>
         <input type="text" id="f-source" value="${esc(p.source)}" placeholder="Who referred them?" />
       </div>
-      <div class="field">
-        <label>Stage</label>
-        <div class="stage-pills" id="stage-pills">${stagePills}</div>
-      </div>
+      ${stageEditor}
+      ${decisionControls}
       <div class="field">
         <label>Notes</label>
         <textarea id="f-notes" placeholder="Add notes…">${esc(p.notes)}</textarea>
+      </div>`;
+
+  const readOnlyBody = `
+      <div class="field">
+        <label>Name</label>
+        <div style="font-size:1.05rem;font-weight:600">${esc(p.name)}</div>
       </div>
-      ${voteSection}
-      ${activityHtml}
-    </div>
+      <div class="field-row">
+        <div class="field"><label>Year</label><div>${p.year ? esc(p.year) : "—"}</div></div>
+        <div class="field"><label>Contact</label><div>${p.contact ? esc(p.contact) : "—"}</div></div>
+      </div>
+      <div class="field"><label>Referred by</label><div>${p.source ? esc(p.source) : "—"}</div></div>
+      <div class="field">
+        <label>Stage</label>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${effBadge}
+          ${decided ? `<span style="font-size:.74rem;color:var(--muted)">Committee decision · ${esc(deciderName)}</span>` : ""}</div>
+      </div>
+      ${p.notes ? `<div class="field"><label>Notes</label><div style="white-space:pre-wrap">${esc(p.notes)}</div></div>` : ""}`;
+
+  const footer = manage ? `
     <div class="modal-footer">
       <div>
         ${!isNew ? `<button class="btn-danger" onclick="confirmDelete('${p.id}')">Delete</button>` : ""}
@@ -670,7 +831,23 @@ function buildProspectModal(p, isNew) {
           ${isNew ? "Create" : "Save"}
         </button>
       </div>
+    </div>` : `
+    <div class="modal-footer">
+      <div></div>
+      <div><button class="btn-ghost" onclick="closeModal()">Close</button></div>
     </div>`;
+
+  return `
+    <div class="modal-header">
+      <span class="modal-title">${isNew ? "New Prospect" : manage ? "Edit Prospect" : "Prospect"}</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      ${manage ? editableBody : readOnlyBody}
+      ${voteSection}
+      ${activityHtml}
+    </div>
+    ${footer}`;
 }
 
 window.openProspect = function(id) {
@@ -692,7 +869,8 @@ window.closeModal = closeModal;
 window.setProspectStage = function(stage) {
   if (!modalProspect) return;
   modalProspect.stage = stage;
-  document.querySelectorAll(".stage-pill").forEach(btn => {
+  // Scope to the pipeline pills only — decision pills share the .stage-pill class.
+  document.querySelectorAll("#stage-pills .stage-pill").forEach(btn => {
     const s = btn.dataset.stage;
     const active = s === stage;
     btn.className = `stage-pill${active ? " active" : ""}`;
@@ -702,37 +880,96 @@ window.setProspectStage = function(stage) {
   });
 };
 
-window.submitVote = async function(prospectId, vote) {
-  if (!ME || !DB) return;
-
-  // Optimistic: update local votes immediately
-  const existing = votes.find(v => v.prospect_id === prospectId && v.voter_id === ME.id);
-  if (existing) {
-    existing.vote = vote;
-    existing.updated_at = new Date().toISOString();
-  } else {
-    votes.push({ id: crypto.randomUUID(), prospect_id: prospectId, voter_id: ME.id, vote, notes: "", created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+// ── Committee decisions (formal advancement) ──────────────────────────────────
+window.issueDecision = async function(prospectId, decision) {
+  if (!amICommittee()) return;
+  const prev = decisionMap.get(prospectId) ?? null;
+  const fromLabel = STAGE_LABELS[effStage(prospects.find(p => p.id === prospectId) ?? {})] ?? "—";
+  decisionMap.set(prospectId, { prospect_id: prospectId, decision, decided_by: ME?.id || "", decided_at: new Date().toISOString() });
+  rebuildDerived();
+  if (modalProspect?.id === prospectId) openModal(buildProspectModal(modalProspect, false));
+  render();
+  showToast(`Decision: ${STAGE_LABELS[decision]}`);
+  if (!DB) return;
+  try {
+    await persistDecision(prospectId, decision);
+    await logActivity(prospectId, "decision", `${fromLabel} → ${STAGE_LABELS[decision]} (committee)`);
+  } catch (e) {
+    if (prev) decisionMap.set(prospectId, prev); else decisionMap.delete(prospectId);
+    rebuildDerived();
+    if (modalProspect?.id === prospectId) openModal(buildProspectModal(modalProspect, false));
+    render();
+    showToast(e?.message ?? "Decision failed — reverted");
   }
-  buildVotesMap();
+};
 
-  // Update vote UI in-place immediately
+window.clearDecision = async function(prospectId) {
+  if (!amICommittee()) return;
+  const prev = decisionMap.get(prospectId) ?? null;
+  decisionMap.delete(prospectId);
+  rebuildDerived();
+  if (modalProspect?.id === prospectId) openModal(buildProspectModal(modalProspect, false));
+  render();
+  showToast("Decision cleared");
+  if (!DB) return;
+  try {
+    await clearDecisionRow(prospectId);
+    await logActivity(prospectId, "decision", "Committee decision cleared");
+  } catch (e) {
+    if (prev) { decisionMap.set(prospectId, prev); rebuildDerived(); }
+    if (modalProspect?.id === prospectId) openModal(buildProspectModal(modalProspect, false));
+    render();
+    showToast(e?.message ?? "Could not clear — reverted");
+  }
+};
+
+window.submitVote = async function(prospectId, vote) {
+  if (!ME || hasVoted(prospectId)) return;
+
+  // Demo (no DB): record locally so the UI behaves the same.
+  if (!DB || !SUBMIT_RESPONSE_URL) {
+    ballots.push({ id: crypto.randomUUID(), prospect_id: prospectId, vote, created_at: new Date().toISOString() });
+    myReceipts.add(prospectId);
+    buildVotesMap();
+    refreshVoteSection(prospectId);
+    render();
+    return;
+  }
+
+  try {
+    await castVote(prospectId, vote);
+    // Persisted. Reflect the new anonymous ballot + my receipt locally. We add an
+    // anonymous ballot (no voter id) purely so the tally updates immediately.
+    ballots.push({ id: crypto.randomUUID(), prospect_id: prospectId, vote, created_at: new Date().toISOString() });
+    myReceipts.add(prospectId);
+    buildVotesMap();
+    refreshVoteSection(prospectId);
+    render();
+  } catch (e) {
+    if (e?.message?.includes("already voted")) { myReceipts.add(prospectId); refreshVoteSection(prospectId); }
+    showToast(e?.message ?? "Could not record vote");
+  }
+};
+
+// Re-render the open modal's vote section after a vote so the buttons collapse
+// into the "recorded" state and the tally updates — without revealing the choice.
+function refreshVoteSection(prospectId) {
+  const section = modalEl?.querySelector(".vote-section");
+  if (!section || modalProspect?.id !== prospectId) return;
   const tally = tallyVotes(votesFor(prospectId));
-  document.querySelectorAll(".vote-btn").forEach(b => {
-    const v = ["yes","no","abstain"].find(c => b.classList.contains(c));
-    if (!v) return;
-    b.className = `vote-btn ${v}${vote === v ? " active" : ""}`;
-  });
-  const tallyEl = modalEl?.querySelector(".vote-tally");
+  const btns = section.querySelector("#vote-btns");
+  if (btns) {
+    btns.outerHTML = `<p class="activity-empty" id="vote-state">✓ Your vote has been recorded — ballots are secret.</p>`;
+    section.querySelector("p:not(#vote-state)")?.remove();
+  }
+  const tallyEl = section.querySelector(".vote-tally");
   if (tallyEl) {
     tallyEl.innerHTML = `
       <span class="vote-tally-item"><span class="vote-dot" style="background:var(--green)"></span> ${tally.yes} yes</span>
       <span class="vote-tally-item"><span class="vote-dot" style="background:var(--red)"></span> ${tally.no} no</span>
       <span class="vote-tally-item"><span class="vote-dot" style="background:#9ca3af"></span> ${tally.abstain} abstain</span>`;
   }
-
-  // Persist in background — no reload() needed since we already updated local state
-  castVote(prospectId, vote).catch(() => {});
-};
+}
 
 window.saveProspect = async function(existingId) {
   const name = document.getElementById("f-name")?.value.trim();
@@ -798,27 +1035,70 @@ window.confirmDelete = async function(id) {
   const p = prospects.find(x => x.id === id);
   if (!await hubConfirm({
     message: `Delete ${p?.name ?? "this prospect"}?`,
-    description: "Their votes and activity will also be removed.",
+    description: "Their activity will also be removed.",
     confirmLabel: "Delete",
     destructive: true,
   })) return;
 
   // Optimistic: remove immediately, persist in background
   const removedProspect = p;
-  const removedVotes = votesMap.get(id) ?? [];
   prospects = prospects.filter(x => x.id !== id);
-  votesMap.delete(id);
   closeModal();
   render();
   showToast("Prospect deleted");
 
   deleteProspect(id).catch(() => {
     if (removedProspect) prospects = [removedProspect, ...prospects];
-    for (const v of removedVotes) votes.push(v);
-    buildVotesMap();
     render();
     showToast("Delete failed — prospect restored");
   });
+};
+
+// ── Committee config (admin-only) ─────────────────────────────────────────────
+// The committee group pointer is writable ONLY through the admin-gated
+// /api/admin-config endpoint (the `settings` table is app_config: no app SQL may
+// write it). This is the trust root for "who may manage any prospect".
+window.openCommitteeConfig = function() {
+  if (!IS_ADMIN) return;
+  const opts = groups.map(g => `<option value="${esc(g.id)}"${g.id === committeeGroupId ? " selected" : ""}>${esc(g.name)}</option>`).join("");
+  openModal(`
+    <div class="modal-header">
+      <span class="modal-title">Recruitment Committee</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Committee group</label>
+        <select id="cc-group">
+          <option value="">— none —</option>
+          ${opts}
+        </select>
+        <p style="font-size:.72rem;color:var(--muted);margin-top:8px">Members of this group may edit, move, and delete <em>any</em> prospect. Without a committee, each member can only manage prospects they added. Manage group membership in the hub's member settings.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveCommitteeConfig()">Save</button>
+      </div>
+    </div>
+  `);
+};
+
+window.saveCommitteeConfig = async function() {
+  const groupId = document.getElementById("cc-group")?.value ?? "";
+  try {
+    const res = await fetch(ADMIN_CONFIG, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "committee_group_id", value: groupId }),
+    });
+    if (!res.ok) { let m = "Save failed"; try { m = (await res.json()).error ?? m; } catch {} throw new Error(m); }
+    committeeGroupId = groupId;
+    closeModal();
+    showToast(groupId ? "Committee updated" : "Committee cleared");
+    render();
+  } catch (e) { showToast(e?.message ?? "Save failed"); }
 };
 
 // ── Nav helpers ───────────────────────────────────────────────────────────────
@@ -848,6 +1128,11 @@ function handleDeepLink() {
 (async () => {
   try {
     await load();
+    // Configuring the committee is admin-only (the only role /api/admin-config accepts).
+    if (IS_ADMIN || !DB) {
+      const cb = document.getElementById("committee-btn");
+      if (cb) cb.style.display = "";
+    }
     handleDeepLink();
     render();
   } catch (err) {
