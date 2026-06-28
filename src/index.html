@@ -191,6 +191,7 @@ import {
   PIPELINE_STAGES, DECISION_STAGES, effectiveStage,
   YEAR_OPTIONS, VOTE_LABELS, VOTE_COLORS,
   tallyVotes, prospectsByStage, sortProspects,
+  isCommittee as _isCommittee,
 } from "./logic.js";
 
 const CONTEXT = window.__CONTEXT_URL ?? "";
@@ -270,9 +271,7 @@ function rebuildDerived() {
 // UI so we don't show edit controls that would 403. New prospects: anyone may add.
 function amICommittee() {
   if (!DB) return true;                       // demo
-  if (!committeeGroupId || !ME) return false;
-  const g = groups.find(g => g.id === committeeGroupId);
-  return !!g && g.memberIds.includes(ME.id);
+  return _isCommittee(ME, groups, committeeGroupId);
 }
 function canManage(p) {
   if (!p || !p.id) return true;               // creating a new prospect

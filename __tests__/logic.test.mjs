@@ -4,7 +4,21 @@ import {
   PIPELINE_STAGES, DECISION_STAGES, effectiveStage,
   YEAR_OPTIONS, VOTE_LABELS, VOTE_COLORS,
   tallyVotes, prospectsByStage, sortProspects,
+  isCommittee,
 } from "../src/logic.js";
+import { testPrivilegedGateContract } from "./helpers/privileged-gate.mjs";
+
+// ── isCommittee ───────────────────────────────────────────────────────────────
+// Fronts the `decisions` insert_privileged_only policy (and privileged edits on
+// `prospects`), so it must satisfy the shared privileged-gate contract (mirrors
+// the hub: no adult fallback when no committee group is configured).
+
+testPrivilegedGateContract("isCommittee", isCommittee, {
+  member:   { id: "a1", role: "adult" },
+  outsider: { id: "a3", role: "adult" },
+  groups:   [{ id: "g1", memberIds: ["a1", "a2"] }],
+  groupId:  "g1",
+});
 
 // ── effectiveStage (formal-decision derivation) ───────────────────────────────
 

@@ -1,5 +1,26 @@
 export { memberColor, initial, esc, isAdult, formatRelativeDate } from "./shared.js";
 
+/**
+ * Whether `me` is on the configured Recruitment Committee — mirrors the
+ * server-side privileged resolution for the `decisions` (insert_privileged_only)
+ * and `prospects` (write_owner_only + bypass) policies, gated by committee_group_id.
+ *
+ * MUST match the hub exactly: privileged IFF the committee group is configured,
+ * still exists, and the member is in it. There is NO "all adults" fallback when
+ * the group is unset or dangling — the hub rejects privileged writes in that
+ * state, so committee controls stay hidden here too (otherwise they would 403).
+ * See __tests__/helpers/privileged-gate.mjs.
+ *
+ * @param {object|null} me
+ * @param {Array}  groups
+ * @param {string|null} committeeGroupId
+ */
+export function isCommittee(me, groups, committeeGroupId) {
+  if (!me || !committeeGroupId) return false;
+  const g = groups.find(g => g.id === committeeGroupId);
+  return !!g && g.memberIds.includes(me.id);
+}
+
 export const STAGES        = ["invited", "rushed", "bid", "pledged", "dropped"];
 export const ACTIVE_STAGES = ["invited", "rushed", "bid", "pledged"];
 
