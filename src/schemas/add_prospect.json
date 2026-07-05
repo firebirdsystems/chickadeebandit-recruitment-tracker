@@ -8,16 +8,29 @@
       "description": "Prospect's full name (required)"
     },
     {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "maxLength": 50,
       "description": "Academic year: Freshman, Sophomore, Junior, Senior, Transfer, or Grad (optional)"
     },
     {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "maxLength": 200,
       "description": "Who referred this prospect (optional)"
+    },
+    {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Calling member's ID \u2014 the hub overwrites this with the authenticated member_id; pass null"
     }
   ],
   "minItems": 1,
-  "maxItems": 3
+  "maxItems": 4
 }

@@ -18,7 +18,7 @@ INSERT INTO app_recruitment_tracker__prospects (
   '',
   'invited',
   '',
-  'ai',
+  ?,
   'everyone',
   datetime('now'),
   datetime('now')

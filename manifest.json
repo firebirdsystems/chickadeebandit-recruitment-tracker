@@ -27,7 +27,7 @@
       "visibility_column": "visibility",
       "everyone_values": ["everyone"],
       "write_owner_only": true,
-      "bypass_group_setting": { "settings_table": "settings", "settings_key": "committee_group_id" }
+      "privileged_groups": [{ "settings_table": "settings", "settings_key": "committee_group_id" }]
     },
     "ballots": {
       "kind": "endpoint_only"
