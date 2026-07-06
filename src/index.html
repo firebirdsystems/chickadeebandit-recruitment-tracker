@@ -202,6 +202,12 @@ const ME      = window.__CURRENT_MEMBER ?? null;
 const IS_ADMIN = !!ME?.isAdmin;
 const APP_ID  = window.__APP_ID ?? "recruitment-tracker";
 
+// Neutralize DB-derived ids before interpolating into inline on* handlers: any
+// member can INSERT a prospect with an attacker-chosen id via raw /api/db, and
+// HTML escaping does not protect a JS-string context inside an attribute. Legit
+// ids are UUIDs, so restricting to [A-Za-z0-9_-] is lossless and injection-proof.
+const sid = v => String(v ?? "").replace(/[^A-Za-z0-9_-]/g, "");
+
 // ── Demo data ─────────────────────────────────────────────────────────────────
 const DEMO_MEMBERS = [
   { id: "dm1", name: "Alex Chen",    role: "adult" },
@@ -541,7 +547,7 @@ function renderCard(p, compact = false) {
   const sourceHtml = p.source ? `<span>via ${esc(p.source)}</span>` : "";
 
   return `
-    <div class="prospect-card" onclick="openProspect('${p.id}')">
+    <div class="prospect-card" onclick="openProspect('${sid(p.id)}')">
       <div class="card-name">${esc(p.name)}</div>
       ${(p.year || p.source) ? `
         <div class="card-meta">
@@ -578,7 +584,7 @@ function renderProspectsList() {
     const source = p.source ? `<span>via ${esc(p.source)}</span>` : "";
 
     return `
-      <div class="prospect-row" onclick="openProspect('${p.id}')">
+      <div class="prospect-row" onclick="openProspect('${sid(p.id)}')">
         <div class="row-info">
           <div class="row-name">${esc(p.name)}</div>
           ${(p.year || p.source) ? `<div class="row-meta">${year}${source}</div>` : ""}
@@ -616,7 +622,7 @@ function renderVotesTab() {
     const color  = STAGE_COLORS[p.stage];
 
     return `
-      <tr onclick="openProspect('${p.id}')">
+      <tr onclick="openProspect('${sid(p.id)}')">
         <td>
           <div style="font-weight:600;font-size:.88rem">${esc(p.name)}</div>
           ${p.year ? `<div style="font-size:.74rem;color:var(--muted)">${esc(p.year)}</div>` : ""}
@@ -713,8 +719,8 @@ function buildProspectModal(p, isNew) {
         ${DECISION_STAGES.map(s => `
           <button class="stage-pill ${decision?.decision === s ? "active" : ""}"
             style="${decision?.decision === s ? `background:${STAGE_COLORS[s]};border-color:${STAGE_COLORS[s]}` : ""}"
-            onclick="issueDecision('${p.id}','${s}')">${esc(STAGE_LABELS[s])}</button>`).join("")}
-        ${decided ? `<button class="stage-pill" onclick="clearDecision('${p.id}')">↩︎ Clear</button>` : ""}
+            onclick="issueDecision('${sid(p.id)}','${s}')">${esc(STAGE_LABELS[s])}</button>`).join("")}
+        ${decided ? `<button class="stage-pill" onclick="clearDecision('${sid(p.id)}')">↩︎ Clear</button>` : ""}
       </div>
       <p style="font-size:.72rem;color:var(--muted);margin-top:6px">Advancing to Bid or Pledged is a formal committee action.</p>
     </div>` : "";
@@ -733,7 +739,7 @@ function buildProspectModal(p, isNew) {
     : `
       <div class="vote-btns" id="vote-btns">
         ${["yes","no","abstain"].map(v => `
-          <button class="vote-btn ${v}" onclick="submitVote('${p.id}','${v}')">
+          <button class="vote-btn ${v}" onclick="submitVote('${sid(p.id)}','${v}')">
             ${{ yes: "✓ Yes", no: "✗ No", abstain: "○ Abstain" }[v]}
           </button>`).join("")}
       </div>
@@ -822,11 +828,11 @@ function buildProspectModal(p, isNew) {
   const footer = manage ? `
     <div class="modal-footer">
       <div>
-        ${!isNew ? `<button class="btn-danger" onclick="confirmDelete('${p.id}')">Delete</button>` : ""}
+        ${!isNew ? `<button class="btn-danger" onclick="confirmDelete('${sid(p.id)}')">Delete</button>` : ""}
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn-ghost" onclick="closeModal()">Cancel</button>
-        <button class="btn-primary" onclick="saveProspect('${isNew ? "" : p.id}')">
+        <button class="btn-primary" onclick="saveProspect('${isNew ? "" : sid(p.id)}')">
           ${isNew ? "Create" : "Save"}
         </button>
       </div>
