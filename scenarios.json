@@ -1,0 +1,30 @@
+{
+  "scenarios": [
+    {
+      "name": "secret ballots are unreadable and unwritable via app SQL; decisions require the committee group",
+      "members": { "member": "adult" },
+      "steps": [
+        {
+          "action": "db",
+          "as": "member",
+          "sql": "SELECT * FROM app_recruitment_tracker__votes",
+          "expect": { "status": 403 }
+        },
+        {
+          "action": "db",
+          "as": "member",
+          "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, ?)",
+          "params": ["b1", "p1", "yes", "2026-01-01T00:00:00Z"],
+          "expect": { "status": 403 }
+        },
+        {
+          "action": "db",
+          "as": "member",
+          "sql": "INSERT INTO app_recruitment_tracker__decisions (id, prospect_id, decided_by) VALUES (?, ?, ?)",
+          "params": ["d1", "p1", "{{member}}"],
+          "expect": { "status": 403 }
+        }
+      ]
+    }
+  ]
+}
