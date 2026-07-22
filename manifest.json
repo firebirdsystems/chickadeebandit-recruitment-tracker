@@ -1,5 +1,6 @@
 {
   "id": "recruitment-tracker",
+  "contexts": ["household", "shared_space"],
   "name": "Recruitment Tracker",
   "version": "1.1.0",
   "description": "Manage rush and recruitment pipeline: add prospects, move them through stages (invited → rushed → bid → pledged), record secret votes and notes.",
