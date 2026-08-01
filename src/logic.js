@@ -97,3 +97,12 @@ export function sortProspects(prospects) {
     return a.name.localeCompare(b.name);
   });
 }
+
+/**
+ * Fields the in-app search matches against (see hub-sdk `searchMatch`). Notes
+ * are included as well as name/source/year: a prospect is often remembered by
+ * what someone wrote about them, not by how they were logged.
+ */
+export function searchableFields(prospect) {
+  return [prospect.name, prospect.source, prospect.year, prospect.notes];
+}

@@ -4,7 +4,7 @@ import {
   PIPELINE_STAGES, DECISION_STAGES, effectiveStage,
   YEAR_OPTIONS, VOTE_LABELS, VOTE_COLORS,
   tallyVotes, prospectsByStage, sortProspects,
-  isCommittee,
+  isCommittee, searchableFields,
 } from "../src/logic.js";
 import { testPrivilegedGateContract } from "./helpers/privileged-gate.mjs";
 
@@ -145,5 +145,13 @@ describe("constants", () => {
       expect(VOTE_LABELS[v]).toBeTruthy();
       expect(VOTE_COLORS[v]).toMatch(/^#/);
     }
+  });
+});
+
+describe("searchableFields", () => {
+  it("reaches the notes, not just name/source/year", () => {
+    const fields = searchableFields({ name: "Jo Park", source: "Career fair", year: "2027", notes: "captain of the rowing team" });
+    expect(fields).toContain("captain of the rowing team");
+    expect(fields).toContain("Career fair");
   });
 });

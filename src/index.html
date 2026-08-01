@@ -185,13 +185,13 @@
 </div>
 
 <script type="module">
-import { memberColor, initial, esc, isAdult, hubConfirm, formatRelativeDate } from "/hub-sdk.js";
+import { memberColor, initial, esc, isAdult, hubConfirm, formatRelativeDate, searchMatch } from "/hub-sdk.js";
 import {
   STAGES, ACTIVE_STAGES, STAGE_LABELS, STAGE_COLORS,
   PIPELINE_STAGES, DECISION_STAGES, effectiveStage,
   YEAR_OPTIONS, VOTE_LABELS, VOTE_COLORS,
   tallyVotes, prospectsByStage, sortProspects,
-  isCommittee as _isCommittee,
+  isCommittee as _isCommittee, searchableFields,
 } from "./logic.js";
 
 const CONTEXT = window.__CONTEXT_URL ?? "";
@@ -560,14 +560,9 @@ function renderCard(p, compact = false) {
 
 // ── Prospects list tab ────────────────────────────────────────────────────────
 function renderProspectsList() {
-  const query  = searchQuery.toLowerCase();
   let filtered = sortProspects(displayProspects);
   if (stageFilter !== "all") filtered = filtered.filter(p => p.stage === stageFilter);
-  if (query) filtered = filtered.filter(p =>
-    p.name.toLowerCase().includes(query) ||
-    p.source.toLowerCase().includes(query) ||
-    p.year.toLowerCase().includes(query)
-  );
+  if (searchQuery) filtered = filtered.filter(p => searchMatch(searchQuery, searchableFields(p)));
 
   const chips = ["all", ...STAGES].map(s => {
     const label = s === "all" ? "All" : STAGE_LABELS[s];
