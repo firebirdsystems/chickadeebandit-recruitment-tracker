@@ -17,6 +17,21 @@
     "requires_approval": false
   },
   "storage": "db",
+  "member_references": {
+    "prospects": { "column": "created_by", "on_removed": "keep" },
+    "votes": { "column": "voter_id", "on_removed": "keep" },
+    "prospect_activity": { "column": "actor_id", "on_removed": "keep" },
+    "vote_receipts": { "column": "member_id", "on_removed": "keep" },
+    "decisions": { "column": "decided_by", "on_removed": "keep" }
+  },
+  "delete_cascades": {
+    "prospects": [
+      { "table": "ballots", "foreign_key": "prospect_id" },
+      { "table": "vote_receipts", "foreign_key": "prospect_id" }
+    ]
+  },
+  "kiosk": "never",
+  "resource_limits": { "max_db_bytes": 52428800 },
   "nav": { "label": "Recruitment" },
   "icon": "🎓",
   "db_plaintext_columns": ["vote", "vote_status", "decision"],
