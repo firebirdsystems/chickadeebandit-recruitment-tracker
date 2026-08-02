@@ -196,6 +196,7 @@ import {
 
 const CONTEXT = window.__CONTEXT_URL ?? "";
 const DB      = window.__DB_URL      ?? "";
+const EVENTS  = window.__EVENTS_URL  ?? "";
 const SUBMIT_RESPONSE_URL = window.__SUBMIT_RESPONSE_URL ?? "";
 const ADMIN_CONFIG = window.__ADMIN_CONFIG_URL ?? "";
 const ME      = window.__CURRENT_MEMBER ?? null;
@@ -436,6 +437,28 @@ async function persistDecision(prospectId, decision) {
      VALUES (?, ?, ?, ?)`,
     [prospectId, decision, ME?.id || "", now]
   );
+  // The outcome only. The ballots behind it stay secret - `votes` is read:none
+  // and a receipt records that someone voted, never how.
+  await publishEvent("recruitment.decision_recorded", prospectId, {
+    decision,
+    decided_at: now,
+  });
+}
+
+/** Best-effort publish onto the household event bus. The decision row is
+ *  already written, so a failed publish must never undo it. Committee-gated in
+ *  publish_acls, matching decisions.insert_privileged_only. */
+async function publishEvent(type, subjectId, payload = {}) {
+  if (!EVENTS) return;
+  try {
+    await fetch(EVENTS, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type, subject_id: subjectId, payload }),
+    });
+  } catch {
+    /* ignore */
+  }
 }
 
 async function clearDecisionRow(prospectId) {

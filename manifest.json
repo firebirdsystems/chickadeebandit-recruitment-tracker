@@ -33,6 +33,84 @@
   "kiosk": "never",
   "resource_limits": { "max_db_bytes": 52428800 },
   "nav": { "label": "Recruitment" },
+  "glance": {
+    "source": {
+      "kind": "sql",
+      "query": "SELECT COUNT(*) AS n FROM app_recruitment_tracker__prospects p LEFT JOIN app_recruitment_tracker__vote_receipts r ON r.prospect_id = p.id LEFT JOIN app_recruitment_tracker__decisions d ON d.prospect_id = p.id WHERE p.vote_status = 'open' AND p.stage <> 'dropped' AND r.member_id IS NULL AND d.prospect_id IS NULL LIMIT 1"
+    },
+    "display": {
+      "template": "badge",
+      "count": "n",
+      "label": "prospects awaiting your vote",
+      "severity": "info"
+    }
+  },
+  "publishes": ["recruitment.decision_recorded"],
+  "publish_acls": {
+    "recruitment.decision_recorded": {
+      "require_group_setting": { "settings_table": "settings", "settings_key": "committee_group_id" }
+    }
+  },
+  "automation_actions": {
+    "add_prospect": {
+      "title": "Add a prospect",
+      "description": "Open a recruitment file when another app's event carries an interested person - an application submitted, a name passed along by a member.",
+      "params": {
+        "created_by": {
+          "type": "member",
+          "label": "Owned by",
+          "required": true
+        },
+        "name": {
+          "type": "text",
+          "label": "Prospect name",
+          "required": true
+        },
+        "year": {
+          "type": "text",
+          "label": "Year",
+          "default": ""
+        },
+        "contact": {
+          "type": "text",
+          "label": "Contact",
+          "default": ""
+        },
+        "source": {
+          "type": "text",
+          "label": "Where they came from",
+          "default": ""
+        },
+        "notes": {
+          "type": "text",
+          "label": "Notes",
+          "default": ""
+        }
+      },
+      "dedupe": {
+        "table": "prospects",
+        "column": "source_event_id"
+      },
+      "steps": [
+        {
+          "op": "insert",
+          "table": "prospects",
+          "values": {
+            "id": "$uuid",
+            "name": ":name",
+            "year": ":year",
+            "contact": ":contact",
+            "source": ":source",
+            "notes": ":notes",
+            "created_by": ":created_by",
+            "created_at": "$now",
+            "updated_at": "$now",
+            "source_event_id": "$event_id"
+          }
+        }
+      ]
+    }
+  },
   "icon": "🎓",
   "db_plaintext_columns": ["stage", "vote", "vote_status", "decision"],
   "row_policies": {
