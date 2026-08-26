@@ -17,6 +17,13 @@
     "requires_approval": false
   },
   "storage": "db",
+  "preload": {
+    "prospects": {"sql": "SELECT * FROM app_recruitment_tracker__prospects ORDER BY created_at"},
+    "vote_receipts": {"sql": "SELECT prospect_id FROM app_recruitment_tracker__vote_receipts"},
+    "prospect_activity": {"sql": "SELECT * FROM app_recruitment_tracker__prospect_activity ORDER BY created_at DESC LIMIT 50"},
+    "settings": {"sql": "SELECT value FROM app_recruitment_tracker__settings WHERE key = 'committee_group_id'"},
+    "decisions": {"sql": "SELECT prospect_id, decision, decided_by, decided_at FROM app_recruitment_tracker__decisions"}
+  },
   "member_references": {
     "prospects": { "column": "created_by", "on_removed": "keep" },
     "votes": { "column": "voter_id", "on_removed": "keep" },
