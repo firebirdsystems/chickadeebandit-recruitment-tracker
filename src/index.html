@@ -570,7 +570,7 @@ function renderCard(p, compact = false) {
   const sourceHtml = p.source ? `<span>via ${esc(p.source)}</span>` : "";
 
   return `
-    <div class="prospect-card" onclick="openProspect('${sid(p.id)}')">
+    <div class="prospect-card" data-testid="prospect-card" data-prospect-id="${esc(p.id)}" onclick="openProspect('${sid(p.id)}')">
       <div class="card-name">${esc(p.name)}</div>
       ${(p.year || p.source) ? `
         <div class="card-meta">
@@ -865,7 +865,7 @@ function buildProspectModal(p, isNew) {
       <span class="modal-title">${isNew ? "New Prospect" : manage ? "Edit Prospect" : "Prospect"}</span>
       <button class="modal-close" onclick="closeModal()">×</button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body" data-testid="prospect-modal" data-prospect-id="${esc(p.id)}" data-can-manage="${manage ? "1" : "0"}">
       ${manage ? editableBody : readOnlyBody}
       ${voteSection}
       ${activityHtml}
