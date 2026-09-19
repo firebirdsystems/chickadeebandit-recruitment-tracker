@@ -309,6 +309,20 @@ async function db(sql, params = []) {
   } catch { return { rows: [] }; }
 }
 
+// A replacement must delete and insert in one transaction. Surface a refused
+// write so callers do not publish an event for a decision that was not saved.
+async function dbBatch(statements) {
+  if (!DB) throw new Error("Database unavailable");
+  const res = await fetch(DB, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ statements }),
+  });
+  const body = await res.json();
+  if (!res.ok || body.error) throw new Error(body.error ?? `batch failed (${res.status})`);
+  return body.results ?? [];
+}
+
 // ── Data loading ──────────────────────────────────────────────────────────────
 async function load() {
   const [ctxRes, prospectsRes, ballotsRes, receiptsRes, activityRes, settingsRes, decisionsRes] = await Promise.all([
@@ -432,11 +446,14 @@ async function logActivity(prospectId, action, detail) {
 // owner cannot advance their own person. decided_by is forced to the caller server-side.
 async function persistDecision(prospectId, decision) {
   const now = new Date().toISOString();
-  await db(
-    `INSERT OR REPLACE INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at)
-     VALUES (?, ?, ?, ?)`,
-    [prospectId, decision, ME?.id || "", now]
-  );
+  await dbBatch([
+    { sql: `DELETE FROM app_recruitment_tracker__decisions WHERE prospect_id = ?`, params: [prospectId] },
+    {
+      sql: `INSERT INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at)
+             VALUES (?, ?, ?, ?)`,
+      params: [prospectId, decision, ME?.id || "", now],
+    },
+  ]);
   // The outcome only. The ballots behind it stay secret - `votes` is read:none
   // and a receipt records that someone voted, never how.
   await publishEvent("recruitment.decision_recorded", prospectId, {
