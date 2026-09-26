@@ -405,9 +405,8 @@ async function updateProspect(id, fields) {
 
 async function deleteProspect(id) {
   // ballots + vote_receipts are written only by the hub anonymous_responses
-  // endpoint and are not app-deletable (endpoint_only / endpoint_writes_only).
-  // Their rows for a deleted prospect become harmless orphans — they carry no
-  // voter id and are never displayed once the prospect is gone.
+  // endpoint and are not app-deletable (endpoint_only / endpoint_writes_only);
+  // manifest.delete_cascades removes them with the prospect row.
   await Promise.all([
     db("DELETE FROM app_recruitment_tracker__prospects WHERE id = ?",          [id]),
     db("DELETE FROM app_recruitment_tracker__prospect_activity WHERE prospect_id = ?", [id]),

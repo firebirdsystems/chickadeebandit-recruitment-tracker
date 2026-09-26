@@ -34,7 +34,8 @@
   "delete_cascades": {
     "prospects": [
       { "table": "ballots", "foreign_key": "prospect_id" },
-      { "table": "vote_receipts", "foreign_key": "prospect_id" }
+      { "table": "vote_receipts", "foreign_key": "prospect_id" },
+      { "table": "decisions", "foreign_key": "prospect_id" }
     ]
   },
   "kiosk": "never",
