@@ -25,6 +25,237 @@
           "expect": { "status": 403 }
         }
       ]
+    },
+    {
+      "name": "a committee-group member records a decision and edits another member's prospect; a plain adult outside the committee cannot",
+      "members": { "chair": "adult", "member": "adult", "scout": "adult" },
+      "steps": [
+        { "action": "seedGroup", "group": "committee", "name": "Recruitment committee", "members": ["chair"] },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_recruitment_tracker__settings (key, value) VALUES ('committee_group_id', ?)",
+          "params": ["{{group:committee}}"]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, stage, created_by, created_at, updated_at, visibility) VALUES ('p-1', 'Pat Prospect', 'rushed', ?, '2099-01-01T00:00:00Z', '2099-01-01T00:00:00Z', 'everyone')",
+          "params": ["{{scout}}"]
+        },
+        {
+          "action": "db",
+          "as": "member",
+          "sql": "INSERT INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at) VALUES (?, ?, ?, ?)",
+          "params": ["p-1", "bid", "{{member}}", "2099-01-05T00:00:00Z"],
+          "expect": { "status": 403 }
+        },
+        {
+          "action": "db",
+          "as": "member",
+          "sql": "UPDATE app_recruitment_tracker__prospects SET stage = 'dropped' WHERE id = 'p-1'",
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "scout",
+          "sql": "SELECT id, stage FROM app_recruitment_tracker__prospects",
+          "expect": { "status": 200, "rowCount": 1, "rowsContain": [{ "id": "p-1", "stage": "rushed" }] }
+        },
+        {
+          "action": "db",
+          "as": "chair",
+          "sql": "INSERT INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at) VALUES (?, ?, ?, ?)",
+          "params": ["p-1", "bid", "{{chair}}", "2099-01-05T00:00:00Z"],
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "chair",
+          "sql": "UPDATE app_recruitment_tracker__prospects SET stage = 'bid' WHERE id = 'p-1'",
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "member",
+          "sql": "SELECT id, stage FROM app_recruitment_tracker__prospects",
+          "expect": { "status": 200, "rowCount": 1, "rowsContain": [{ "id": "p-1", "stage": "bid" }] }
+        },
+        {
+          "action": "db",
+          "as": "member",
+          "sql": "SELECT prospect_id, decision, decided_by FROM app_recruitment_tracker__decisions",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [{ "prospect_id": "p-1", "decision": "bid", "decided_by": "scn-chair" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "in a space nobody but the voter, not the steward and not a committee member, can tell who has voted on a prospect, and the voter cannot erase or forge a receipt to vote again",
+      "context": "shared_space",
+      "members": { "steward": "admin", "chair": "adult", "voter": "adult" },
+      "steps": [
+        { "action": "seedGroup", "group": "committee", "name": "Recruitment committee", "members": ["chair"] },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_recruitment_tracker__settings (key, value) VALUES ('committee_group_id', ?)",
+          "params": ["{{group:committee}}"]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, stage, created_by, created_at, updated_at, visibility, vote_status) VALUES ('p-1', 'Pat Prospect', 'rushed', ?, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z', 'everyone', 'open')",
+          "params": ["{{chair}}"]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES ('p-1', ?, '2026-01-02T00:00:00Z')",
+          "params": ["{{voter}}"]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES ('b-1', 'p-1', 'yes', '2026-01-02T00:00:00Z')"
+        },
+        {
+          "action": "db",
+          "as": "steward",
+          "sql": "SELECT prospect_id, member_id FROM app_recruitment_tracker__vote_receipts WHERE prospect_id = ?",
+          "params": ["p-1"],
+          "expect": { "status": 200, "rowCount": 0 }
+        },
+        {
+          "action": "db",
+          "as": "chair",
+          "sql": "SELECT prospect_id, member_id FROM app_recruitment_tracker__vote_receipts WHERE prospect_id = ?",
+          "params": ["p-1"],
+          "expect": { "status": 200, "rowCount": 0 }
+        },
+        {
+          "action": "db",
+          "as": "voter",
+          "sql": "SELECT prospect_id, member_id FROM app_recruitment_tracker__vote_receipts WHERE prospect_id = ?",
+          "params": ["p-1"],
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [{ "prospect_id": "p-1", "member_id": "scn-voter" }]
+          }
+        },
+        {
+          "action": "db",
+          "as": "voter",
+          "sql": "DELETE FROM app_recruitment_tracker__vote_receipts WHERE prospect_id = ? AND member_id = ?",
+          "params": ["p-1", "{{voter}}"],
+          "expect": { "status": 403, "errorIncludes": "endpoint" }
+        },
+        {
+          "action": "db",
+          "as": "chair",
+          "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, ?)",
+          "params": ["p-1", "{{chair}}", "2026-01-03T00:00:00Z"],
+          "expect": { "status": 403, "errorIncludes": "endpoint" }
+        },
+        {
+          "action": "db",
+          "as": "steward",
+          "sql": "UPDATE app_recruitment_tracker__vote_receipts SET member_id = ? WHERE prospect_id = ?",
+          "params": ["{{steward}}", "p-1"],
+          "expect": { "status": 403, "errorIncludes": "endpoint" }
+        },
+        {
+          "action": "db",
+          "as": "voter",
+          "sql": "SELECT prospect_id, member_id FROM app_recruitment_tracker__vote_receipts",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [{ "prospect_id": "p-1", "member_id": "scn-voter" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "the prospect history is shared but only its author can rewrite or erase an entry, an entry logged in another member's name is stamped with the real author, and a child is kept out of committee business entirely",
+      "members": { "scout": "adult", "member": "adult", "kid": "child" },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES ('a-1', 'p-1', ?, 'note', 'Great at the mixer', '2026-01-01T00:00:00Z', 'everyone')",
+          "params": ["{{scout}}"]
+        },
+        {
+          "action": "db",
+          "as": "member",
+          "sql": "SELECT id, actor_id, detail FROM app_recruitment_tracker__prospect_activity WHERE prospect_id = ?",
+          "params": ["p-1"],
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [{ "id": "a-1", "actor_id": "scn-scout", "detail": "Great at the mixer" }]
+          }
+        },
+        {
+          "action": "db",
+          "as": "member",
+          "sql": "UPDATE app_recruitment_tracker__prospect_activity SET detail = 'Skipped the mixer' WHERE id = ?",
+          "params": ["a-1"],
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "member",
+          "sql": "DELETE FROM app_recruitment_tracker__prospect_activity WHERE id = ?",
+          "params": ["a-1"],
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "member",
+          "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+          "params": ["a-2", "p-1", "{{scout}}", "note", "Vote no", "2026-01-02T00:00:00Z"],
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "scout",
+          "sql": "SELECT id, actor_id, detail FROM app_recruitment_tracker__prospect_activity WHERE prospect_id = ?",
+          "params": ["p-1"],
+          "expect": {
+            "status": 200,
+            "rowCount": 2,
+            "rowsContain": [
+              { "id": "a-1", "actor_id": "scn-scout", "detail": "Great at the mixer" },
+              { "id": "a-2", "actor_id": "scn-member", "detail": "Vote no" }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "scout",
+          "sql": "UPDATE app_recruitment_tracker__prospect_activity SET detail = 'Great at the mixer; follow up' WHERE id = ?",
+          "params": ["a-1"],
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "member",
+          "sql": "SELECT detail FROM app_recruitment_tracker__prospect_activity WHERE id = ?",
+          "params": ["a-1"],
+          "expect": { "status": 200, "rowCount": 1, "rowsContain": [{ "detail": "Great at the mixer; follow up" }] }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "SELECT id FROM app_recruitment_tracker__prospect_activity",
+          "expect": { "status": 403, "errorIncludes": "not available" }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "SELECT prospect_id FROM app_recruitment_tracker__vote_receipts",
+          "expect": { "status": 403, "errorIncludes": "not available" }
+        }
+      ]
     }
   ]
 }
