@@ -170,9 +170,9 @@
 <body>
 <div class="app">
   <div class="header">
-    <h1>🎓 Recruitment</h1>
+    <h1><span id="page-glyph"></span> Recruitment</h1>
     <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn-ghost" id="committee-btn" style="display:none" onclick="openCommitteeConfig()" title="Recruitment committee">⚙︎ Committee</button>
+      <button class="btn-ghost" id="committee-btn" style="display:none" onclick="openCommitteeConfig()" title="Recruitment committee"><span id="committee-glyph"></span> Committee</button>
       <button class="btn-primary" onclick="openNewProspect()">+ Add Prospect</button>
     </div>
   </div>
@@ -185,7 +185,11 @@
 </div>
 
 <script type="module">
-import { memberColor, initial, esc, isAdult, hubConfirm, formatRelativeDate, searchMatch } from "/hub-sdk.js";
+import { memberColor, initial, esc, isAdult, hubConfirm, formatRelativeDate, searchMatch, glyph } from "/hub-sdk.js";
+
+// The header marks are static markup; they are drawn here because the glyphs come from the SDK.
+document.getElementById("page-glyph").innerHTML = glyph("graduation");
+document.getElementById("committee-glyph").innerHTML = glyph("gear");
 import {
   STAGES, ACTIVE_STAGES, STAGE_LABELS, STAGE_COLORS,
   PIPELINE_STAGES, DECISION_STAGES, effectiveStage,
@@ -501,9 +505,9 @@ function mcolor(id)           { return memberColor(id, members); }
 function renderTallyChips(tally) {
   if (tally.total === 0) return `<span style="font-size:.72rem;color:var(--muted)">No votes</span>`;
   const parts = [];
-  if (tally.yes     > 0) parts.push(`<span class="tally-chip tally-yes">✓ ${tally.yes}</span>`);
-  if (tally.no      > 0) parts.push(`<span class="tally-chip tally-no">✗ ${tally.no}</span>`);
-  if (tally.abstain > 0) parts.push(`<span class="tally-chip tally-abstain">○ ${tally.abstain}</span>`);
+  if (tally.yes     > 0) parts.push(`<span class="tally-chip tally-yes">${glyph("tick", { accent: "currentColor" })} ${tally.yes}</span>`);
+  if (tally.no      > 0) parts.push(`<span class="tally-chip tally-no">${glyph("close", { accent: "currentColor" })} ${tally.no}</span>`);
+  if (tally.abstain > 0) parts.push(`<span class="tally-chip tally-abstain">${glyph("dot", { accent: "currentColor" })} ${tally.abstain}</span>`);
   return parts.join("");
 }
 
@@ -769,12 +773,12 @@ function buildProspectModal(p, isNew) {
   // Secret ballot: a member casts once and the choice is never stored against
   // their identity, so we can show that they've voted but not which way.
   const voteControls = voted
-    ? `<p class="activity-empty" id="vote-state">✓ Your vote has been recorded — ballots are secret.</p>`
+    ? `<p class="activity-empty" id="vote-state">${glyph("tick")} Your vote has been recorded — ballots are secret.</p>`
     : `
       <div class="vote-btns" id="vote-btns">
         ${["yes","no","abstain"].map(v => `
           <button class="vote-btn ${v}" onclick="submitVote('${sid(p.id)}','${v}')">
-            ${{ yes: "✓ Yes", no: "✗ No", abstain: "○ Abstain" }[v]}
+            ${{ yes: `${glyph("tick", { accent: "currentColor" })} Yes`, no: `${glyph("close", { accent: "currentColor" })} No`, abstain: `${glyph("dot", { accent: "currentColor" })} Abstain` }[v]}
           </button>`).join("")}
       </div>
       <p style="font-size:.72rem;color:var(--muted);margin-bottom:10px">Votes are secret and can't be changed once cast.</p>`;
@@ -998,7 +1002,7 @@ function refreshVoteSection(prospectId) {
   const tally = tallyVotes(votesFor(prospectId));
   const btns = section.querySelector("#vote-btns");
   if (btns) {
-    btns.outerHTML = `<p class="activity-empty" id="vote-state">✓ Your vote has been recorded — ballots are secret.</p>`;
+    btns.outerHTML = `<p class="activity-empty" id="vote-state">${glyph("tick")} Your vote has been recorded — ballots are secret.</p>`;
     section.querySelector("p:not(#vote-state)")?.remove();
   }
   const tallyEl = section.querySelector(".vote-tally");
