@@ -1,0 +1,1873 @@
+{
+ "groups": [
+  {
+   "key": "committee",
+   "name": "Recruitment Committee",
+   "members": [
+    "{{me}}",
+    "{{partner}}"
+   ]
+  }
+ ],
+ "seed": [
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__settings (key, value) VALUES (?, ?)",
+   "params": [
+    "committee_group_id",
+    "{{group:committee}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-75 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-63 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-01",
+    "Jordan Alvarez",
+    "Freshman",
+    "jordan.alvarez@example.com",
+    "Referred by a neighbour",
+    "invited",
+    "Attended two events.",
+    "{{me}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-75 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-001",
+    "perf-prospect-01",
+    "{{me}}",
+    "prospect_added",
+    "Added Jordan Alvarez",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-73.1 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-61.099999999999994 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-02",
+    "Avery Fitzgerald",
+    "Sophomore",
+    "avery.fitzgerald@example.com",
+    "Fall open house",
+    "invited",
+    "Very keen, asked about dues.",
+    "{{partner}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-71.2 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-59.2 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-03",
+    "Riley Kowalski",
+    "Junior",
+    "riley.kowalski@example.com",
+    "Met at the activities fair",
+    "invited",
+    "Plays guitar, offered to help with the talent night.",
+    "{{adult2}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-69.3 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-57.3 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-04",
+    "Morgan Dawson",
+    "Senior",
+    "morgan.dawson@example.com",
+    "Friend of a member",
+    "invited",
+    "Quiet at the mixer but stayed late to help clean up.",
+    "{{me}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-69.3 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-002",
+    "perf-prospect-04",
+    "{{me}}",
+    "prospect_added",
+    "Added Morgan Dawson",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-67.4 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-55.400000000000006 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-05",
+    "Casey Ibrahim",
+    "Transfer",
+    "casey.ibrahim@example.com",
+    "Signed up on the website",
+    "invited",
+    "{{partner}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-65.5 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-53.5 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-06",
+    "Quinn Bennett",
+    "Grad",
+    "quinn.bennett@example.com",
+    "Intramural team",
+    "invited",
+    "Great with the younger members.",
+    "{{me}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-63.6 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-51.6 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-07",
+    "Taylor Gupta",
+    "Freshman",
+    "taylor.gupta@example.com",
+    "Came to the charity run",
+    "invited",
+    "Knows three current members from class.",
+    "{{partner}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-63.6 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-003",
+    "perf-prospect-07",
+    "{{partner}}",
+    "prospect_added",
+    "Added Taylor Gupta",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-61.7 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-49.7 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-08",
+    "Reese Laurent",
+    "Sophomore",
+    "reese.laurent@example.com",
+    "Referred by a neighbour",
+    "invited",
+    "Missed the second event, said they were ill.",
+    "{{adult2}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-59.8 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-47.8 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-09",
+    "Devon Ekström",
+    "Junior",
+    "devon.ekstrom@example.com",
+    "Fall open house",
+    "invited",
+    "Attended two events.",
+    "{{me}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-57.900000000000006 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-45.900000000000006 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-10",
+    "Harper Jensen",
+    "Senior",
+    "harper.jensen@example.com",
+    "Met at the activities fair",
+    "rushed",
+    "{{partner}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-57.900000000000006 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-004",
+    "perf-prospect-10",
+    "{{partner}}",
+    "prospect_added",
+    "Added Harper Jensen",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-49.900000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-001",
+    "perf-prospect-10",
+    "no"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-48.900000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-002",
+    "perf-prospect-10",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-47.900000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-003",
+    "perf-prospect-10",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-56 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-44 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-11",
+    "Rowan Chen",
+    "Transfer",
+    "rowan.chen@example.com",
+    "Friend of a member",
+    "rushed",
+    "Plays guitar, offered to help with the talent night.",
+    "{{me}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-50 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-005",
+    "perf-prospect-11",
+    "{{me}}",
+    "stage_changed",
+    "Invited → Rushed",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-48 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-004",
+    "perf-prospect-11",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-47 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-005",
+    "perf-prospect-11",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-46 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-006",
+    "perf-prospect-11",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-48 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-11",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-54.1 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-42.1 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-12",
+    "Emerson Hollis",
+    "Grad",
+    "emerson.hollis@example.com",
+    "Signed up on the website",
+    "rushed",
+    "Quiet at the mixer but stayed late to help clean up.",
+    "{{partner}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-46.1 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-007",
+    "perf-prospect-12",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-45.1 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-008",
+    "perf-prospect-12",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-44.1 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-009",
+    "perf-prospect-12",
+    "no"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-46.1 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-12",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-52.2 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-40.2 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-13",
+    "Skyler Alvarez",
+    "Freshman",
+    "skyler.alvarez@example.com",
+    "Intramural team",
+    "rushed",
+    "Has a heavy course load this term.",
+    "{{adult2}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-52.2 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-006",
+    "perf-prospect-13",
+    "{{adult2}}",
+    "prospect_added",
+    "Added Skyler Alvarez",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-46.2 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-007",
+    "perf-prospect-13",
+    "{{adult2}}",
+    "stage_changed",
+    "Invited → Rushed",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-44.2 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-010",
+    "perf-prospect-13",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-43.2 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-011",
+    "perf-prospect-13",
+    "no"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-42.2 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-012",
+    "perf-prospect-13",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-44.2 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-13",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-50.3 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-38.3 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-14",
+    "Parker Fitzgerald",
+    "Sophomore",
+    "parker.fitzgerald@example.com",
+    "Came to the charity run",
+    "rushed",
+    "Great with the younger members.",
+    "{{me}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-42.3 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-013",
+    "perf-prospect-14",
+    "no"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-41.3 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-014",
+    "perf-prospect-14",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-40.3 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-015",
+    "perf-prospect-14",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-48.400000000000006 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-36.400000000000006 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-15",
+    "Sage Kowalski",
+    "Junior",
+    "sage.kowalski@example.com",
+    "Referred by a neighbour",
+    "rushed",
+    "{{partner}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-42.400000000000006 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-008",
+    "perf-prospect-15",
+    "{{partner}}",
+    "stage_changed",
+    "Invited → Rushed",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-40.400000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-016",
+    "perf-prospect-15",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-39.400000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-017",
+    "perf-prospect-15",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-38.400000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-018",
+    "perf-prospect-15",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-40.400000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-15",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-46.5 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-34.5 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-16",
+    "Dakota Dawson",
+    "Senior",
+    "dakota.dawson@example.com",
+    "Fall open house",
+    "rushed",
+    "Missed the second event, said they were ill.",
+    "{{me}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-46.5 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-009",
+    "perf-prospect-16",
+    "{{me}}",
+    "prospect_added",
+    "Added Dakota Dawson",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-38.5 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-019",
+    "perf-prospect-16",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-37.5 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-020",
+    "perf-prospect-16",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-36.5 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-021",
+    "perf-prospect-16",
+    "no"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-38.5 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-16",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-44.6 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-32.6 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-17",
+    "Finley Ibrahim",
+    "Transfer",
+    "finley.ibrahim@example.com",
+    "Met at the activities fair",
+    "rushed",
+    "Attended two events.",
+    "{{partner}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-38.6 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-010",
+    "perf-prospect-17",
+    "{{partner}}",
+    "stage_changed",
+    "Invited → Rushed",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-36.6 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-022",
+    "perf-prospect-17",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-35.6 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-023",
+    "perf-prospect-17",
+    "no"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-34.6 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-024",
+    "perf-prospect-17",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-36.6 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-17",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-42.7 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-30.700000000000003 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-18",
+    "Hayden Bennett",
+    "Grad",
+    "hayden.bennett@example.com",
+    "Friend of a member",
+    "rushed",
+    "Very keen, asked about dues.",
+    "{{adult2}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-34.7 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-025",
+    "perf-prospect-18",
+    "no"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-33.7 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-026",
+    "perf-prospect-18",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-32.7 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-027",
+    "perf-prospect-18",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-40.800000000000004 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-28.800000000000004 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-19",
+    "Jamie Gupta",
+    "Freshman",
+    "jamie.gupta@example.com",
+    "Signed up on the website",
+    "rushed",
+    "Plays guitar, offered to help with the talent night.",
+    "{{me}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-40.800000000000004 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-011",
+    "perf-prospect-19",
+    "{{me}}",
+    "prospect_added",
+    "Added Jamie Gupta",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-34.800000000000004 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-012",
+    "perf-prospect-19",
+    "{{me}}",
+    "stage_changed",
+    "Invited → Rushed",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-32.800000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-028",
+    "perf-prospect-19",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-31.800000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-029",
+    "perf-prospect-19",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-30.800000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-030",
+    "perf-prospect-19",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-32.800000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-19",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-38.9 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-26.9 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-20",
+    "Kendall Laurent",
+    "Sophomore",
+    "kendall.laurent@example.com",
+    "Intramural team",
+    "rushed",
+    "{{partner}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-30.9 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-031",
+    "perf-prospect-20",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-29.9 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-032",
+    "perf-prospect-20",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-28.9 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-033",
+    "perf-prospect-20",
+    "no"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-30.9 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-20",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-37 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-25 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-21",
+    "Logan Ekström",
+    "Junior",
+    "logan.ekstrom@example.com",
+    "Came to the charity run",
+    "rushed",
+    "Has a heavy course load this term.",
+    "{{me}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-31 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-013",
+    "perf-prospect-21",
+    "{{me}}",
+    "stage_changed",
+    "Invited → Rushed",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-23 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-21",
+    "bid",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-23 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-014",
+    "perf-prospect-21",
+    "{{me}}",
+    "decision",
+    "Rushed → Bid (committee)",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-29 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-034",
+    "perf-prospect-21",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-28 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-035",
+    "perf-prospect-21",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-27 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-036",
+    "perf-prospect-21",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-26 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-037",
+    "perf-prospect-21",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-29 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-21",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-35.1 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-23.1 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-22",
+    "Micah Jensen",
+    "Senior",
+    "micah.jensen@example.com",
+    "Referred by a neighbour",
+    "rushed",
+    "Great with the younger members.",
+    "{{partner}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-35.1 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-015",
+    "perf-prospect-22",
+    "{{partner}}",
+    "prospect_added",
+    "Added Micah Jensen",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-21.1 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-22",
+    "bid",
+    "{{partner}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-21.1 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-016",
+    "perf-prospect-22",
+    "{{partner}}",
+    "decision",
+    "Rushed → Bid (committee)",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-27.1 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-038",
+    "perf-prospect-22",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-26.1 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-039",
+    "perf-prospect-22",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-25.1 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-040",
+    "perf-prospect-22",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-24.1 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-041",
+    "perf-prospect-22",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-33.2 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-21.200000000000003 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-23",
+    "Noel Chen",
+    "Transfer",
+    "noel.chen@example.com",
+    "Fall open house",
+    "rushed",
+    "Knows three current members from class.",
+    "{{adult2}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-27.200000000000003 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-017",
+    "perf-prospect-23",
+    "{{adult2}}",
+    "stage_changed",
+    "Invited → Rushed",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-19.200000000000003 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-23",
+    "bid",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-19.200000000000003 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-018",
+    "perf-prospect-23",
+    "{{me}}",
+    "decision",
+    "Rushed → Bid (committee)",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-25.200000000000003 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-042",
+    "perf-prospect-23",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-24.200000000000003 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-043",
+    "perf-prospect-23",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-23.200000000000003 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-044",
+    "perf-prospect-23",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-22.200000000000003 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-045",
+    "perf-prospect-23",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-25.200000000000003 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-23",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-31.300000000000004 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-19.300000000000004 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-24",
+    "Oakley Hollis",
+    "Grad",
+    "oakley.hollis@example.com",
+    "Met at the activities fair",
+    "rushed",
+    "Missed the second event, said they were ill.",
+    "{{me}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-17.300000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-24",
+    "bid",
+    "{{partner}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-17.300000000000004 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-019",
+    "perf-prospect-24",
+    "{{partner}}",
+    "decision",
+    "Rushed → Bid (committee)",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-23.300000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-046",
+    "perf-prospect-24",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-22.300000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-047",
+    "perf-prospect-24",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-21.300000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-048",
+    "perf-prospect-24",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20.300000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-049",
+    "perf-prospect-24",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-23.300000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-24",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-29.400000000000006 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-17.400000000000006 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-25",
+    "Peyton Alvarez",
+    "Freshman",
+    "peyton.alvarez@example.com",
+    "Friend of a member",
+    "rushed",
+    "{{partner}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-29.400000000000006 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-020",
+    "perf-prospect-25",
+    "{{partner}}",
+    "prospect_added",
+    "Added Peyton Alvarez",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-23.400000000000006 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-021",
+    "perf-prospect-25",
+    "{{partner}}",
+    "stage_changed",
+    "Invited → Rushed",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-15.400000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-25",
+    "bid",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-15.400000000000006 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-022",
+    "perf-prospect-25",
+    "{{me}}",
+    "decision",
+    "Rushed → Bid (committee)",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-21.400000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-050",
+    "perf-prospect-25",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20.400000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-051",
+    "perf-prospect-25",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-19.400000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-052",
+    "perf-prospect-25",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-18.400000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-053",
+    "perf-prospect-25",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-21.400000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-25",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-27.5 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-15.5 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-26",
+    "Remy Fitzgerald",
+    "Sophomore",
+    "remy.fitzgerald@example.com",
+    "Signed up on the website",
+    "rushed",
+    "Very keen, asked about dues.",
+    "{{me}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-13.5 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-26",
+    "bid",
+    "{{partner}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-13.5 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-023",
+    "perf-prospect-26",
+    "{{partner}}",
+    "decision",
+    "Rushed → Bid (committee)",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-19.5 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-054",
+    "perf-prospect-26",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-18.5 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-055",
+    "perf-prospect-26",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-17.5 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-056",
+    "perf-prospect-26",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-16.5 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-057",
+    "perf-prospect-26",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-25.6 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-13.600000000000001 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-27",
+    "Shiloh Kowalski",
+    "Junior",
+    "shiloh.kowalski@example.com",
+    "Intramural team",
+    "rushed",
+    "Plays guitar, offered to help with the talent night.",
+    "{{partner}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-19.6 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-024",
+    "perf-prospect-27",
+    "{{partner}}",
+    "stage_changed",
+    "Invited → Rushed",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-11.600000000000001 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-27",
+    "pledged",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-11.600000000000001 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-025",
+    "perf-prospect-27",
+    "{{me}}",
+    "decision",
+    "Rushed → Pledged (committee)",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-17.6 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-058",
+    "perf-prospect-27",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-16.6 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-059",
+    "perf-prospect-27",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-15.600000000000001 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-060",
+    "perf-prospect-27",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14.600000000000001 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-061",
+    "perf-prospect-27",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-17.6 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-27",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-23.700000000000003 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-11.700000000000003 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-28",
+    "Tatum Dawson",
+    "Senior",
+    "tatum.dawson@example.com",
+    "Came to the charity run",
+    "rushed",
+    "Quiet at the mixer but stayed late to help clean up.",
+    "{{adult2}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-23.700000000000003 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-026",
+    "perf-prospect-28",
+    "{{adult2}}",
+    "prospect_added",
+    "Added Tatum Dawson",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9.700000000000003 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-28",
+    "pledged",
+    "{{partner}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9.700000000000003 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-027",
+    "perf-prospect-28",
+    "{{partner}}",
+    "decision",
+    "Rushed → Pledged (committee)",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-15.700000000000003 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-062",
+    "perf-prospect-28",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14.700000000000003 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-063",
+    "perf-prospect-28",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-13.700000000000003 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-064",
+    "perf-prospect-28",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-12.700000000000003 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-065",
+    "perf-prospect-28",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-15.700000000000003 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-28",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-21.800000000000004 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-9.800000000000004 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-29",
+    "Blair Ibrahim",
+    "Transfer",
+    "blair.ibrahim@example.com",
+    "Referred by a neighbour",
+    "rushed",
+    "Has a heavy course load this term.",
+    "{{me}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-15.800000000000004 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-028",
+    "perf-prospect-29",
+    "{{me}}",
+    "stage_changed",
+    "Invited → Rushed",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-7.800000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-29",
+    "pledged",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-7.800000000000004 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-029",
+    "perf-prospect-29",
+    "{{me}}",
+    "decision",
+    "Rushed → Pledged (committee)",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-13.800000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-066",
+    "perf-prospect-29",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-12.800000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-067",
+    "perf-prospect-29",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-11.800000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-068",
+    "perf-prospect-29",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-10.800000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-069",
+    "perf-prospect-29",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-13.800000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-29",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-19.900000000000006 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-7.900000000000006 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-30",
+    "Cameron Bennett",
+    "Grad",
+    "cameron.bennett@example.com",
+    "Fall open house",
+    "rushed",
+    "{{partner}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-5.900000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-30",
+    "pledged",
+    "{{partner}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-5.900000000000006 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-030",
+    "perf-prospect-30",
+    "{{partner}}",
+    "decision",
+    "Rushed → Pledged (committee)",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-11.900000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-070",
+    "perf-prospect-30",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-10.900000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-071",
+    "perf-prospect-30",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9.900000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-072",
+    "perf-prospect-30",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-8.900000000000006 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-073",
+    "perf-prospect-30",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-18 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-6 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-31",
+    "Drew Gupta",
+    "Freshman",
+    "drew.gupta@example.com",
+    "Met at the activities fair",
+    "rushed",
+    "Knows three current members from class.",
+    "{{me}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-18 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-031",
+    "perf-prospect-31",
+    "{{me}}",
+    "prospect_added",
+    "Added Drew Gupta",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-12 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-032",
+    "perf-prospect-31",
+    "{{me}}",
+    "stage_changed",
+    "Invited → Rushed",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-4 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-31",
+    "pledged",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-4 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-033",
+    "perf-prospect-31",
+    "{{me}}",
+    "decision",
+    "Rushed → Pledged (committee)",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-10 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-074",
+    "perf-prospect-31",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-075",
+    "perf-prospect-31",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-8 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-076",
+    "perf-prospect-31",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-7 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-077",
+    "perf-prospect-31",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-10 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-31",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-16.1 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-4.100000000000001 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-32",
+    "Ellis Laurent",
+    "Sophomore",
+    "ellis.laurent@example.com",
+    "Friend of a member",
+    "rushed",
+    "Missed the second event, said they were ill.",
+    "{{partner}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__decisions (prospect_id, decision, decided_by, decided_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-2.1000000000000014 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-32",
+    "pledged",
+    "{{partner}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-2.1000000000000014 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-034",
+    "perf-prospect-32",
+    "{{partner}}",
+    "decision",
+    "Rushed → Pledged (committee)",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-8.100000000000001 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-078",
+    "perf-prospect-32",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-7.100000000000001 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-079",
+    "perf-prospect-32",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-6.100000000000001 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-080",
+    "perf-prospect-32",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-5.100000000000001 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-081",
+    "perf-prospect-32",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-8.100000000000001 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-32",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14.200000000000003 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-2.200000000000003 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-33",
+    "Frankie Ekström",
+    "Junior",
+    "frankie.ekstrom@example.com",
+    "Signed up on the website",
+    "dropped",
+    "Attended two events.",
+    "{{adult2}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-8.200000000000003 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-035",
+    "perf-prospect-33",
+    "{{adult2}}",
+    "stage_changed",
+    "Invited → Dropped",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-6.200000000000003 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-082",
+    "perf-prospect-33",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-5.200000000000003 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-083",
+    "perf-prospect-33",
+    "no"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-6.200000000000003 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-33",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-12.300000000000004 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-0.30000000000000426 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-34",
+    "Gray Jensen",
+    "Senior",
+    "gray.jensen@example.com",
+    "Intramural team",
+    "dropped",
+    "Very keen, asked about dues.",
+    "{{me}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-12.300000000000004 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-036",
+    "perf-prospect-34",
+    "{{me}}",
+    "prospect_added",
+    "Added Gray Jensen",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-4.300000000000004 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-084",
+    "perf-prospect-34",
+    "no"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-3.3000000000000043 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-085",
+    "perf-prospect-34",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-10.400000000000006 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-0.3 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-35",
+    "Indigo Chen",
+    "Transfer",
+    "indigo.chen@example.com",
+    "Came to the charity run",
+    "dropped",
+    "{{partner}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at, visibility) VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-4.400000000000006 days','+0 minutes'), ?)",
+   "params": [
+    "perf-act-037",
+    "perf-prospect-35",
+    "{{partner}}",
+    "stage_changed",
+    "Invited → Dropped",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-2.4000000000000057 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-086",
+    "perf-prospect-35",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-1.4000000000000057 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-087",
+    "perf-prospect-35",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-2.4000000000000057 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-35",
+    "{{me}}"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at, visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-8.5 days','+0 minutes'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-0.3 days','+0 minutes'), ?)",
+   "params": [
+    "perf-prospect-36",
+    "Jules Hollis",
+    "Grad",
+    "jules.hollis@example.com",
+    "Referred by a neighbour",
+    "dropped",
+    "Quiet at the mixer but stayed late to help clean up.",
+    "{{me}}",
+    "everyone"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-0.6 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-088",
+    "perf-prospect-36",
+    "abstain"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__ballots (id, prospect_id, vote, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-0.6 days','+0 minutes'))",
+   "params": [
+    "perf-ballot-089",
+    "perf-prospect-36",
+    "yes"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_recruitment_tracker__vote_receipts (prospect_id, member_id, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-0.6 days','+0 minutes'))",
+   "params": [
+    "perf-prospect-36",
+    "{{me}}"
+   ]
+  }
+ ]
+}
