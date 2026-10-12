@@ -165,6 +165,8 @@
 
     /* Toast */
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1f2937; color: #fff; padding: 10px 20px; border-radius: 10px; font-size: 0.85rem; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,.25); pointer-events: none; }
+    .load-error { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: var(--hub-tint-danger, #fee2e2); color: var(--hub-tint-danger-fg, #b91c1c); font-size: 0.9rem; display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+    .load-error-retry { background: none; border: 1px solid currentColor; border-radius: 8px; padding: 5px 10px; font: inherit; font-weight: 600; color: inherit; cursor: pointer; flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -173,7 +175,7 @@
     <h1><span id="page-glyph"></span> Recruitment</h1>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="btn-ghost" id="committee-btn" style="display:none" onclick="openCommitteeConfig()" title="Recruitment committee"><span id="committee-glyph"></span> Committee</button>
-      <button class="btn-primary" onclick="openNewProspect()">+ Add Prospect</button>
+      <button class="btn-primary" id="add-prospect-btn" onclick="openNewProspect()">+ Add Prospect</button>
     </div>
   </div>
   <div class="tabs">
@@ -303,14 +305,14 @@ let toastTimer    = null;
 // ── DB helper ─────────────────────────────────────────────────────────────────
 async function db(sql, params = []) {
   if (!DB) return { rows: [] };
-  try {
-    const res = await fetch(DB, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sql, params }),
-    });
-    return await res.json();
-  } catch { return { rows: [] }; }
+  const res = await fetch(DB, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sql, params }),
+  });
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json || typeof json !== "object" || json.error) throw new Error(json?.error || "Couldn’t reach the hub. Try again.");
+  return json;
 }
 
 // A replacement must delete and insert in one transaction. Surface a refused
@@ -322,8 +324,8 @@ async function dbBatch(statements) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ statements }),
   });
-  const body = await res.json();
-  if (!res.ok || body.error) throw new Error(body.error ?? `batch failed (${res.status})`);
+  const body = await res.json().catch(() => null);
+  if (!res.ok || !body || typeof body !== "object" || body.error) throw new Error(body?.error ?? `batch failed (${res.status})`);
   return body.results ?? [];
 }
 
@@ -331,7 +333,12 @@ async function dbBatch(statements) {
 async function load() {
   const [ctxRes, prospectsRes, ballotsRes, receiptsRes, activityRes, settingsRes, decisionsRes] = await Promise.all([
     CONTEXT
-      ? fetch(`${CONTEXT}?keys=family.members,family.groups`).then(r => r.json()).catch(() => ({}))
+      // A roster that cannot be read is a failed load, not the demo members.
+      ? fetch(`${CONTEXT}?keys=family.members,family.groups`).then(async r => {
+          const json = await r.json().catch(() => null);
+          if (!r.ok || !json || typeof json !== "object" || (Array.isArray(json.$errors) && json.$errors.some(k => k === "family.members" || k === "family.groups"))) throw new Error("Couldn’t reach the hub. Try again.");
+          return json;
+        })
       : Promise.resolve({}),
     db("SELECT * FROM app_recruitment_tracker__prospects ORDER BY created_at"),
     // ballots are endpoint_only (read: everyone) and carry NO voter id, so this
@@ -346,7 +353,8 @@ async function load() {
     db("SELECT prospect_id, decision, decided_by, decided_at FROM app_recruitment_tracker__decisions"),
   ]);
 
-  members = ctxRes["family.members"] ?? DEMO_MEMBERS;
+  // Demo members belong to demo mode only: a hub answer without the roster is an empty one.
+  members = CONTEXT ? (ctxRes["family.members"] ?? []) : DEMO_MEMBERS;
   groups  = ctxRes["family.groups"] ?? [];
 
   if (DB) {
@@ -401,20 +409,40 @@ async function createProspect(fields) {
 
 async function updateProspect(id, fields) {
   const sets = Object.keys(fields).map(k => `${k} = ?`).join(", ");
-  await db(
+  const res = await db(
     `UPDATE app_recruitment_tracker__prospects SET ${sets}, updated_at = ? WHERE id = ?`,
     [...Object.values(fields), new Date().toISOString(), id]
   );
+  return rowsChanged(res);
+}
+
+// The hub answers a write it narrowed to nothing (a prospect or decision that is
+// someone else's to manage) with HTTP 200 and `changed: 0`. Demo mode has no
+// hub to refuse anything.
+function rowsChanged(res) {
+  return DB ? Number(res?.changed ?? 0) : 1;
+}
+
+// What is really stored, redrawn, after a write the hub left unapplied.
+async function resyncAfterRefusal(message) {
+  await reload().catch(() => {});
+  if (modalProspect && modalEl && !modalIsNew) {
+    const fresh = prospects.find(p => p.id === modalProspect.id);
+    if (fresh) { modalProspect = { ...fresh }; openModal(buildProspectModal(modalProspect, false)); }
+    else closeModal();
+  }
+  render();
+  showToast(message);
 }
 
 async function deleteProspect(id) {
   // ballots + vote_receipts are written only by the hub anonymous_responses
   // endpoint and are not app-deletable (endpoint_only / endpoint_writes_only);
   // manifest.delete_cascades removes them with the prospect row.
-  await Promise.all([
-    db("DELETE FROM app_recruitment_tracker__prospects WHERE id = ?",          [id]),
-    db("DELETE FROM app_recruitment_tracker__prospect_activity WHERE prospect_id = ?", [id]),
-  ]);
+  const res = await db("DELETE FROM app_recruitment_tracker__prospects WHERE id = ?", [id]);
+  if (!rowsChanged(res)) return 0;
+  await db("DELETE FROM app_recruitment_tracker__prospect_activity WHERE prospect_id = ?", [id]);
+  return 1;
 }
 
 // Cast a SECRET ballot through the hub anonymous_responses endpoint. The server
@@ -436,11 +464,15 @@ async function castVote(prospectId, vote) {
 
 async function logActivity(prospectId, action, detail) {
   const id = crypto.randomUUID();
-  await db(
-    `INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [id, prospectId, ME?.id || null, action, detail, new Date().toISOString()]
-  );
+  // Best-effort: the write this line describes has already landed, so a failed
+  // log entry must not make the caller undo it.
+  try {
+    await db(
+      `INSERT INTO app_recruitment_tracker__prospect_activity (id, prospect_id, actor_id, action, detail, created_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [id, prospectId, ME?.id || null, action, detail, new Date().toISOString()]
+    );
+  } catch { /* ignore */ }
 }
 
 // Record a formal advancement decision (bid/pledged). Writes to the committee-only
@@ -484,7 +516,8 @@ async function publishEvent(type, subjectId, payload = {}) {
 async function clearDecisionRow(prospectId) {
   // Only the committee (or the original decider) may delete a decision row — the
   // inherit_visibility writer rules block an owner from clearing one.
-  await db("DELETE FROM app_recruitment_tracker__decisions WHERE prospect_id = ?", [prospectId]);
+  const res = await db("DELETE FROM app_recruitment_tracker__decisions WHERE prospect_id = ?", [prospectId]);
+  return rowsChanged(res);
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -512,12 +545,16 @@ function renderTallyChips(tally) {
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
+// Set when the first load failed; cleared when "Try again" gets through.
+let loadFailed = false;
 function render() {
   const root = document.getElementById("root");
   if (!root) return;
   rebuildDerived();
 
-  if (activeTab === "pipeline")  root.innerHTML = renderPipeline();
+  // Unread prospects are not "no prospects": every tab shows the banner alone.
+  if (loadFailed) root.innerHTML = `<div class="load-error" data-testid="load-error" role="alert"><span>Couldn’t load the prospects.</span> <button type="button" class="load-error-retry" data-testid="load-retry">Try again</button></div>`;
+  else if (activeTab === "pipeline")  root.innerHTML = renderPipeline();
   else if (activeTab === "prospects") root.innerHTML = renderProspectsList();
   else if (activeTab === "votes")     root.innerHTML = renderVotesTab();
 
@@ -956,7 +993,10 @@ window.clearDecision = async function(prospectId) {
   showToast("Decision cleared");
   if (!DB) return;
   try {
-    await clearDecisionRow(prospectId);
+    if (!await clearDecisionRow(prospectId)) {
+      await resyncAfterRefusal("That decision could not be cleared.");
+      return;
+    }
     await logActivity(prospectId, "decision", "Committee decision cleared");
   } catch (e) {
     if (prev) { decisionMap.set(prospectId, prev); rebuildDerived(); }
@@ -1062,7 +1102,10 @@ window.saveProspect = async function(existingId) {
     showToast("Saved");
 
     try {
-      await updateProspect(existingId, fields);
+      if (!await updateProspect(existingId, fields)) {
+        await resyncAfterRefusal("This prospect can no longer be changed.");
+        return;
+      }
       if (prevStage && prevStage !== fields.stage) {
         await logActivity(existingId, "stage_changed", `${STAGE_LABELS[prevStage]} → ${STAGE_LABELS[fields.stage]}`);
       }
@@ -1090,7 +1133,9 @@ window.confirmDelete = async function(id) {
   render();
   showToast("Prospect deleted");
 
-  deleteProspect(id).catch(() => {
+  deleteProspect(id).then((deleted) => {
+    if (!deleted) return resyncAfterRefusal("This prospect could not be deleted.");
+  }).catch(() => {
     if (removedProspect) prospects = [removedProspect, ...prospects];
     render();
     showToast("Delete failed — prospect restored");
@@ -1168,21 +1213,19 @@ function handleDeepLink() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-(async () => {
-  try {
-    await load();
-    // Configuring the committee is admin-only (the only role /api/admin-config accepts).
-    if (IS_ADMIN || !DB) {
-      const cb = document.getElementById("committee-btn");
-      if (cb) cb.style.display = "";
-    }
-    handleDeepLink();
-    render();
-  } catch (err) {
-    const root = document.getElementById("root");
-    if (root) root.innerHTML = `<div class="empty"><h3>Failed to load</h3><p>${esc(err?.message ?? "Unknown error")}</p></div>`;
-  }
-})();
+async function firstLoad() {
+  loadFailed = await load().then(() => false, () => true);
+  // Configuring the committee is admin-only (the only role /api/admin-config accepts).
+  // Neither it nor adding is offered over a list and a setting that were not read.
+  document.getElementById("committee-btn").style.display = !loadFailed && (IS_ADMIN || !DB) ? "" : "none";
+  document.getElementById("add-prospect-btn").style.display = loadFailed ? "none" : "";
+  if (!loadFailed) handleDeepLink();
+  render();
+}
+document.getElementById("root").addEventListener("click", (e) => {
+  if (e.target.closest('[data-testid="load-retry"]')) firstLoad();
+});
+firstLoad();
 </script>
 </body>
 </html>
