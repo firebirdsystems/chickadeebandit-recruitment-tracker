@@ -35,6 +35,7 @@
     .btn-sm:hover { border-color: var(--accent); color: var(--text); }
     .btn-danger { background: var(--hub-tint-danger, #fee2e2); color: var(--red); border: none; border-radius: 6px; padding: 7px 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
     .btn-danger:hover { background: #fecaca; }
+    .save-error { color: var(--red); font-size: 0.8rem; padding: 0 20px 10px; text-align: right; }
 
     /* Tabs */
     .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
@@ -457,8 +458,11 @@ async function castVote(prospectId, vote) {
   });
   if (!res.ok) {
     let msg = "Could not record vote";
-    try { const j = await res.json(); if (j.already_responded) msg = "You've already voted on this prospect"; else if (j.error) msg = j.error; } catch {}
-    throw new Error(msg);
+    // Only the "already voted" answer is worded for the reader (forUser); the
+    // hub's own error text is for the console.
+    let forUser = false;
+    try { const j = await res.json(); if (j.already_responded) { msg = "You've already voted on this prospect"; forUser = true; } else if (j.error) msg = j.error; } catch {}
+    throw Object.assign(new Error(msg), { forUser });
   }
 }
 
@@ -901,13 +905,14 @@ function buildProspectModal(p, isNew) {
       ${p.notes ? `<div class="field"><label>Notes</label><div style="white-space:pre-wrap">${esc(p.notes)}</div></div>` : ""}`;
 
   const footer = manage ? `
+    <div class="save-error" id="f-error" role="alert" hidden></div>
     <div class="modal-footer">
       <div>
         ${!isNew ? `<button class="btn-danger" onclick="confirmDelete('${sid(p.id)}')">Delete</button>` : ""}
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn-ghost" onclick="closeModal()">Cancel</button>
-        <button class="btn-primary" onclick="saveProspect('${isNew ? "" : sid(p.id)}')">
+        <button class="btn-primary" id="f-save" onclick="saveProspect('${isNew ? "" : sid(p.id)}')">
           ${isNew ? "Create" : "Save"}
         </button>
       </div>
@@ -979,7 +984,8 @@ window.issueDecision = async function(prospectId, decision) {
     rebuildDerived();
     if (modalProspect?.id === prospectId) openModal(buildProspectModal(modalProspect, false));
     render();
-    showToast(e?.message ?? "Decision failed — reverted");
+    console.error(e);
+    showToast("Couldn’t save the decision — try again.");
   }
 };
 
@@ -1002,7 +1008,8 @@ window.clearDecision = async function(prospectId) {
     if (prev) { decisionMap.set(prospectId, prev); rebuildDerived(); }
     if (modalProspect?.id === prospectId) openModal(buildProspectModal(modalProspect, false));
     render();
-    showToast(e?.message ?? "Could not clear — reverted");
+    console.error(e);
+    showToast("Couldn’t clear the decision — try again.");
   }
 };
 
@@ -1029,8 +1036,9 @@ window.submitVote = async function(prospectId, vote) {
     refreshVoteSection(prospectId);
     render();
   } catch (e) {
-    if (e?.message?.includes("already voted")) { myReceipts.add(prospectId); refreshVoteSection(prospectId); }
-    showToast(e?.message ?? "Could not record vote");
+    if (e?.forUser && e.message.includes("already voted")) { myReceipts.add(prospectId); refreshVoteSection(prospectId); }
+    else console.error(e);
+    showToast(e?.forUser ? e.message : "Couldn’t record your vote — try again.");
   }
 };
 
@@ -1068,52 +1076,52 @@ window.saveProspect = async function(existingId) {
     notes:   document.getElementById("f-notes")?.value || "",
   };
 
-  if (modalIsNew) {
-    // Optimistic: add immediately, persist in background
-    const id = crypto.randomUUID();
-    const ts = new Date().toISOString();
-    const optimistic = { id, ...fields, created_by: ME?.id || null, created_at: ts, updated_at: ts };
-    prospects = [optimistic, ...prospects];
-    votesMap.set(id, []);
-    closeModal();
-    render();
-    showToast("Prospect added");
+  // The modal stays open until the hub has the prospect: a save that fails
+  // says so in the modal and leaves what was typed in place to send again.
+  const saveBtn = document.getElementById("f-save");
+  const errorEl = document.getElementById("f-error");
+  if (saveBtn?.disabled) return;
+  if (saveBtn) saveBtn.disabled = true;
+  if (errorEl) errorEl.hidden = true;
+  const failed = () => {
+    if (errorEl) { errorEl.textContent = "Couldn’t save — try again."; errorEl.hidden = false; }
+  };
 
-    try {
-      await db(
-        `INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [id, fields.name, fields.year, fields.contact, fields.source, fields.stage, fields.notes, ME?.id || null, ts, ts]
-      );
-      await logActivity(id, "prospect_added", `Added ${fields.name}`);
-    } catch {
-      prospects = prospects.filter(p => p.id !== id);
-      votesMap.delete(id);
+  try {
+    if (modalIsNew) {
+      const id = crypto.randomUUID();
+      const ts = new Date().toISOString();
+      try {
+        await db(
+          `INSERT INTO app_recruitment_tracker__prospects (id, name, year, contact, source, stage, notes, created_by, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [id, fields.name, fields.year, fields.contact, fields.source, fields.stage, fields.notes, ME?.id || null, ts, ts]
+        );
+      } catch { return failed(); }
+      prospects = [{ id, ...fields, created_by: ME?.id || null, created_at: ts, updated_at: ts }, ...prospects];
+      votesMap.set(id, []);
+      closeModal();
       render();
-      showToast("Failed to save — please try again");
-    }
-  } else {
-    // Optimistic: update immediately, persist in background
-    const idx = prospects.findIndex(p => p.id === existingId);
-    const prev = idx !== -1 ? { ...prospects[idx] } : null;
-    if (idx !== -1) prospects[idx] = { ...prospects[idx], ...fields, updated_at: new Date().toISOString() };
-    closeModal();
-    render();
-    showToast("Saved");
-
-    try {
-      if (!await updateProspect(existingId, fields)) {
+      showToast("Prospect added");
+      await logActivity(id, "prospect_added", `Added ${fields.name}`);
+    } else {
+      let changed;
+      try { changed = await updateProspect(existingId, fields); } catch { return failed(); }
+      if (!changed) {
         await resyncAfterRefusal("This prospect can no longer be changed.");
         return;
       }
+      const idx = prospects.findIndex(p => p.id === existingId);
+      if (idx !== -1) prospects[idx] = { ...prospects[idx], ...fields, updated_at: new Date().toISOString() };
+      closeModal();
+      render();
+      showToast("Saved");
       if (prevStage && prevStage !== fields.stage) {
         await logActivity(existingId, "stage_changed", `${STAGE_LABELS[prevStage]} → ${STAGE_LABELS[fields.stage]}`);
       }
-    } catch {
-      if (idx !== -1 && prev) prospects[idx] = prev;
-      render();
-      showToast("Save failed — changes reverted");
     }
+  } finally {
+    if (saveBtn) saveBtn.disabled = false;
   }
 };
 
@@ -1186,7 +1194,7 @@ window.saveCommitteeConfig = async function() {
     closeModal();
     showToast(groupId ? "Committee updated" : "Committee cleared");
     render();
-  } catch (e) { showToast(e?.message ?? "Save failed"); }
+  } catch (e) { console.error(e); showToast("Couldn’t save the committee — try again."); }
 };
 
 // ── Nav helpers ───────────────────────────────────────────────────────────────
