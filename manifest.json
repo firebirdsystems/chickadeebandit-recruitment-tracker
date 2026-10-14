@@ -42,7 +42,6 @@
     ]
   },
   "kiosk": "never",
-  "resource_limits": { "max_db_bytes": 52428800 },
   "nav": { "label": "Recruitment" },
   "glance": {
     "source": {
