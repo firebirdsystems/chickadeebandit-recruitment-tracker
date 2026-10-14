@@ -8,12 +8,9 @@
       "description": "Prospect's full name (required)"
     },
     {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "maxLength": 50,
-      "description": "Academic year: Freshman, Sophomore, Junior, Senior, Transfer, or Grad (optional)"
+      "description": "Academic year: Freshman, Sophomore, Junior, Senior, Transfer, or Grad; pass an empty string if unknown"
     },
     {
       "type": [
@@ -31,6 +28,6 @@
       "description": "Calling member's ID \u2014 the hub overwrites this with the authenticated member_id; pass null"
     }
   ],
-  "minItems": 1,
+  "minItems": 2,
   "maxItems": 4
 }

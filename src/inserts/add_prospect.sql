@@ -13,7 +13,7 @@ INSERT INTO app_recruitment_tracker__prospects (
 ) VALUES (
   lower(hex(randomblob(16))),
   ?,
-  COALESCE(?, ''),
+  ?,
   COALESCE(?, ''),
   '',
   'invited',
